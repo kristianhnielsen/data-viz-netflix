@@ -82,38 +82,62 @@ def _(df, netflix_data):
 
 @app.cell
 def _(mo):
-    mo.md(r"""# Top countries""")
+    mo.md(r"""## Handle multiple countries in one value""")
     return
 
 
 @app.cell
 def _(netflix_data):
-    country_val_counts = netflix_data.value_counts("country")
-    first_10_countries = country_val_counts[:20]
-    return country_val_counts, first_10_countries
+    netflix_data[netflix_data['country'].str.contains(',', na=False)]
+    return
 
 
 @app.cell
-def _(first_10_countries, plt, sns):
-    # Plotting top 10 countries
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x=first_10_countries.index, y=first_10_countries.values)
-    plt.title("Top 10 Countries by Number of Titles on Netflix")
+def _(mo):
+    mo.md(r"""### Split the countries up into primary and secondary (where secondary is any other countries listed, if any)""")
+    return
+
+
+@app.cell
+def _(netflix_data):
+    # First, let's create a list of countries for each row by splitting the string
+    country_lists = netflix_data['country'].str.split(', ', expand=False)
+
+    # Create the 'country_primary' column by taking the first item from each list
+    netflix_data['country_primary'] = country_lists.str[0]
+
+    # Create the 'country_secondary' column by taking all other items and joining them
+    netflix_data['country_secondary'] = country_lists.str[1:].str.join(', ')
+
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""# Top (primary) countries""")
+    return
+
+
+@app.cell
+def _(mo):
+    top_x_countries = mo.ui.slider(1, 40, value=10)
+    mo.md(f"How many countries to show: {top_x_countries}")
+    return (top_x_countries,)
+
+
+@app.cell
+def _(netflix_data, plt, sns, top_x_countries):
+    country_val_counts = netflix_data.value_counts("country_primary")[:top_x_countries.value]
+
+
+    # Plotting top X countries
+    plt.figure(figsize=(5, 3))
+    sns.barplot(x=country_val_counts.index, y=country_val_counts.values)
+    plt.title(f"Top {top_x_countries.value} Countries by Number of Titles on Netflix")
     plt.xlabel("Country")
     plt.ylabel("Number of Titles")
     plt.xticks(rotation=65)
     plt.show()
-    return
-
-
-@app.cell
-def _(country_val_counts):
-    country_val_counts[:10]
-    return
-
-
-@app.cell
-def _():
     return
 
 
