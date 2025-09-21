@@ -9,7 +9,7 @@ def _(mo):
     mo.md(
         r"""
     # Exploratory Data Analysis
-    In this script we can do EDA and preview data transformations needed for visualization in the Dash app 
+    In this script we can do EDA and preview data transformations needed for visualization in the Dash app
     """
     )
     return
