@@ -25,9 +25,10 @@ def _(mo):
 def _():
     import marimo as mo
     import pandas as pd
+    import numpy as np
     import seaborn as sns
     import matplotlib.pyplot as plt
-    return mo, pd, plt, sns
+    return mo, np, pd, plt, sns
 
 
 @app.cell
@@ -39,6 +40,49 @@ def _(pd):
 @app.cell
 def _(netflix_data):
     netflix_data.columns
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## Missing Values""")
+    return
+
+
+@app.cell
+def _(netflix_data):
+    netflix_data.isnull().sum()
+    return
+
+
+@app.cell
+def _(netflix_data, np):
+    # add No Data where cast and director is NA
+    netflix_data['cast'] = netflix_data['cast'].replace(np.nan, 'No Data')
+    netflix_data['director'] = netflix_data['director'].replace(np.nan, 'No Data')
+    netflix_data.isnull().sum()
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## Handle Datetimes""")
+    return
+
+
+@app.cell
+def _(df, netflix_data):
+    netflix_data["date_added"] = netflix_data.to_datetime(df['date_added'])
+
+    netflix_data['month_added'] = netflix_data['date_added'].dt.month
+    netflix_data['month_name_added'] = netflix_data['date_added'].dt.month_name()
+    netflix_data['year_added'] = netflix_data['date_added'].dt.year
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""# Top countries""")
     return
 
 
