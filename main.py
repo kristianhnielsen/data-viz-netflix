@@ -2,15 +2,20 @@ from dash import Dash, html, dcc, callback, Output, Input
 import pandas as pd
 from components import data_table
 from static import heading
+from data import netflix
 
 
 def main():
-    # data preprocessing
-    netflix_data = pd.read_csv(r"data\netflix_titles.csv")
+    # data import and preprocessing
 
-    netflix_data["Top 3 cast"] = netflix_data["cast"].apply(
-        lambda x: ", ".join(x.split(", ")[:3]) if pd.notnull(x) else x
+    config = netflix.NetflixDataConfig(
+        netflix_titles_path="data/netflix_titles.csv", omdb_path="data/omdb_data.csv"
     )
+
+    preprocessor = netflix.NetflixDataPreprocessor()
+
+    netflix_data = netflix.NetflixData(config=config, preprocessor=preprocessor)
+    data = netflix_data.data
 
     # app setup
     app = Dash(__name__)
@@ -21,7 +26,7 @@ def main():
         heading.render(),
         html.Div(
             children=[
-                data_table.render(app, data=netflix_data),
+                data_table.render(app, data=data),
             ],
             style={
                 "textAlign": "center",

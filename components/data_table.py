@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def render(app: Dash, data: pd.DataFrame):
-    columns_for_table = ["title", "Top 3 cast", "director", "country"]
+    columns_for_table = ["title",  "director", "country"]
     table = dash_table.DataTable(
         id="data-table",
         columns=[{"name": i, "id": i} for i in columns_for_table],
