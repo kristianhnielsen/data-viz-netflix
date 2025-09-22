@@ -13,6 +13,7 @@ def render(app: Dash, data: pd.DataFrame):
             filtered_df,
             x="release_year",
             title=f"Movies in {value} by Year",
+            labels={"release_year": "Release Year", "count": "Number of Movies"},
         )
 
     return html.Div(
@@ -20,5 +21,6 @@ def render(app: Dash, data: pd.DataFrame):
             html.H1(children="Movies in ", style={"textAlign": "center"}),
             dcc.Dropdown(df.Country.unique(), "Canada", id="dropdown-selection"),
             dcc.Graph(id="graph-content"),
-        ]
+        ],
+        style={"padding": "20px", "backgroundColor": "#2C2C2E"},
     )
