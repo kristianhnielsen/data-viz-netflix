@@ -1,22 +1,36 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
 import pandas as pd
 import requests
 from urllib.parse import urljoin, quote_plus
-import os
 
 
-class NetflixDataPreprocessor:
-    def __init__(self, data: pd.DataFrame, has_omdb_data=False) -> None:
+@dataclass
+class NetflixDataConfig:
+    netflix_titles_path: Path | str
+    omdb_path: Path | str | None = None
+
+    def __post_init__(self):
+        if isinstance(self.netflix_titles_path, str):
+            self.netflix_titles_path = Path(self.netflix_titles_path)
+        if isinstance(self.omdb_path, str):
+            self.omdb_path = Path(self.omdb_path)
+        self.has_omdb = self.omdb_path is not None and self.omdb_path.exists()
+
+
+class Preprocessor(ABC):
+    @abstractmethod
+    def process_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        pass
+
+
+class NetflixDataPreprocessor(Preprocessor):
+    def process_data(self, data: pd.DataFrame):
         self.data = data
-        self._has_omdb_data = has_omdb_data
-        self.process_data()
-
-    def process_data(self):
         self._handle_missing_values()
         self._handle_datetime()
-
-    def get_processed_data(self):
-        return self.data
+        return data
 
     def _handle_datetime(self):
         self.data["date_added"] = pd.to_datetime(self.data["date_added"].str.strip())
@@ -30,47 +44,29 @@ class NetflixDataPreprocessor:
 
 
 class NetflixData:
-    def __init__(self, path="data/netflix_titles.csv"):
-        self.path = path
-        self.omdb_data_path = "data/omdb_data.csv"
-        self._has_omdb_data = False
-        self.preprocessor = NetflixDataPreprocessor(self.load_data())
-        self.data = self.preprocessor.get_processed_data()
-
-    def _merge_omdb_data(self):
-        if os.path.exists(self.omdb_data_path):
-            omdb_df = pd.read_csv(self.omdb_data_path)
-            self.data = self.data.merge(
-                omdb_df, left_on="title", right_on="Title", how="left"
-            )
-            self._has_omdb_data = True
-        return self.data
-
-    def load_data(self):
-        self.data = pd.read_csv(self.path)
-        self._merge_omdb_data()
-        return self.data
-
-    def get_data(self):
-        return self.data
-
-    def _add_omdb_data(self):
-        omdb = OMDB()
-        titles = self.data["title"].tolist()
-        omdb_data = omdb.fetch_data_from_dataset(titles)
-        omdb_df = pd.DataFrame(omdb_data)
-        omdb_df.to_csv("data/omdb_data.csv", index=False)
-        self.data = self.data.merge(
-            omdb_df, left_on="title", right_on="Title", how="left"
-        )
-        return self.data
+    def __init__(self, config: NetflixDataConfig, preprocessor: Preprocessor):
+        self.config = config
+        self.data = preprocessor.process_data(self._load_data())
 
     def to_csv(self, path: str):
         self.data.to_csv(path, index=False)
         return
 
+    def _load_data(self):
+        self.data = pd.read_csv(self.config.netflix_titles_path)
+        if self.config.has_omdb and self.config.omdb_path:
+            omdb_data = pd.read_csv(self.config.omdb_path)
+            self._merge_omdb_data(omdb_data=omdb_data)
+        return self.data
 
-class OMDB:
+    def _merge_omdb_data(self, omdb_data: pd.DataFrame):
+        self.data = self.data.merge(
+            omdb_data, left_on="title", right_on="Title", how="left"
+        )
+        return self.data
+
+
+class OMDB_API:
     def __init__(self):
         self.base_url = "http://www.omdbapi.com/"
         self.api_keys = [
@@ -120,5 +116,12 @@ class OMDB:
 
 
 if __name__ == "__main__":
-    netflix_data = NetflixData()
-    print("Data preprocessing complete and saved to CSV.")
+    config = NetflixDataConfig(
+        netflix_titles_path="data/netflix_titles.csv", omdb_path="data/omdb_data.csv"
+    )
+    preprocessor = NetflixDataPreprocessor()
+
+    netflix_data = NetflixData(config=config, preprocessor=preprocessor)
+    data = netflix_data.data
+    print(data.columns)
+    print(data.head())
