@@ -71,12 +71,12 @@ def _(mo):
 
 
 @app.cell
-def _(df, netflix_data):
-    netflix_data["date_added"] = netflix_data.to_datetime(df['date_added'])
+def _():
+    # netflix_data["date_added"] = netflix_data.to_datetime(df['date_added'])
 
-    netflix_data['month_added'] = netflix_data['date_added'].dt.month
-    netflix_data['month_name_added'] = netflix_data['date_added'].dt.month_name()
-    netflix_data['year_added'] = netflix_data['date_added'].dt.year
+    # netflix_data['month_added'] = netflix_data['date_added'].dt.month
+    # netflix_data['month_name_added'] = netflix_data['date_added'].dt.month_name()
+    # netflix_data['year_added'] = netflix_data['date_added'].dt.year
     return
 
 
@@ -108,7 +108,6 @@ def _(netflix_data):
 
     # Create the 'country_secondary' column by taking all other items and joining them
     netflix_data['country_secondary'] = country_lists.str[1:].str.join(', ')
-
     return
 
 
@@ -138,6 +137,16 @@ def _(netflix_data, plt, sns, top_x_countries):
     plt.ylabel("Number of Titles")
     plt.xticks(rotation=65)
     plt.show()
+    return
+
+
+@app.cell
+def _():
+    from data.netflix import NetflixData
+
+    netflix = NetflixData()
+    netflix_df = netflix.get_data()
+    netflix_df.head()
     return
 
 
