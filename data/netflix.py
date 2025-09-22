@@ -1,7 +1,32 @@
+from dataclasses import dataclass
 import pandas as pd
 import requests
 from urllib.parse import urljoin, quote_plus
 import os
+
+
+class NetflixDataPreprocessor:
+    def __init__(self, data: pd.DataFrame, has_omdb_data=False) -> None:
+        self.data = data
+        self._has_omdb_data = has_omdb_data
+        self.process_data()
+
+    def process_data(self):
+        self._handle_missing_values()
+        self._handle_datetime()
+
+    def get_processed_data(self):
+        return self.data
+
+    def _handle_datetime(self):
+        self.data["date_added"] = pd.to_datetime(self.data["date_added"].str.strip())
+        self.data["month_added"] = self.data["date_added"].dt.month
+        self.data["month_name_added"] = self.data["date_added"].dt.month_name()
+        self.data["year_added"] = self.data["date_added"].dt.year
+
+    def _handle_missing_values(self):
+        self.data["cast"] = self.data["cast"].fillna("No Data")
+        self.data["director"] = self.data["director"].fillna("No Data")
 
 
 class NetflixData:
@@ -9,8 +34,8 @@ class NetflixData:
         self.path = path
         self.omdb_data_path = "data/omdb_data.csv"
         self._has_omdb_data = False
-        self.data = self.load_data()
-        self.preprocess()
+        self.preprocessor = NetflixDataPreprocessor(self.load_data())
+        self.data = self.preprocessor.get_processed_data()
 
     def _merge_omdb_data(self):
         if os.path.exists(self.omdb_data_path):
@@ -27,24 +52,6 @@ class NetflixData:
         return self.data
 
     def get_data(self):
-        return self.data
-
-    def preprocess(self):
-        self.data = self._handle_missing_values()
-        self.data = self._handle_datetimes()
-        return self.data
-
-    def _handle_missing_values(self):
-        self.data["cast"] = self.data["cast"].fillna("No Data")
-        self.data["director"] = self.data["director"].fillna("No Data")
-        return self.data
-
-    def _handle_datetimes(self):
-        self.data["date_added"] = pd.to_datetime(self.data["date_added"].str.strip())
-
-        self.data["month_added"] = self.data["date_added"].dt.month
-        self.data["month_name_added"] = self.data["date_added"].dt.month_name()
-        self.data["year_added"] = self.data["date_added"].dt.year
         return self.data
 
     def _add_omdb_data(self):
@@ -114,5 +121,4 @@ class OMDB:
 
 if __name__ == "__main__":
     netflix_data = NetflixData()
-    netflix_data.preprocess()
     print("Data preprocessing complete and saved to CSV.")
