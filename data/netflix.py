@@ -42,6 +42,11 @@ class NetflixDataPreprocessor(Preprocessor):
         self.data["cast"] = self.data["cast"].fillna("No Data")
         self.data["director"] = self.data["director"].fillna("No Data")
 
+    def _pick_a_country(self, countries: str):
+        if pd.isna(countries) or countries.strip() == "":
+            return "No Data"
+        return countries.split(",")[0].strip()
+
 
 class NetflixData:
     def __init__(self, config: NetflixDataConfig, preprocessor: Preprocessor):

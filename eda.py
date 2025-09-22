@@ -32,8 +32,13 @@ def _():
 
 
 @app.cell
+def _():
+    return
+
+
+@app.cell
 def _(pd):
-    netflix_data = pd.read_csv(r"data\netflix_titles.csv")
+    netflix_data = pd.read_csv("data/netflix_titles.csv")
     return (netflix_data,)
 
 
@@ -142,11 +147,17 @@ def _(netflix_data, plt, sns, top_x_countries):
 
 @app.cell
 def _():
-    from data.netflix import NetflixData
+    from data import netflix
 
-    netflix = NetflixData()
-    netflix_df = netflix.get_data()
-    netflix_df.head()
+    config = netflix.NetflixDataConfig(
+            netflix_titles_path="data/netflix_titles.csv", omdb_path="data/omdb_data.csv"
+        )
+    preprocessor = netflix.NetflixDataPreprocessor()
+
+    netflixData = netflix.NetflixData(config=config, preprocessor=preprocessor)
+    data = netflixData.data
+    data.head()
+
     return
 
 
