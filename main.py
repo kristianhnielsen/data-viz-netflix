@@ -22,6 +22,10 @@ def main():
     app.title = "Netflix in Numbers"
 
     # app layout
+    from static import theme
+
+    t = theme.THEME
+
     app.layout = html.Div(
         [
             heading.render(),
@@ -30,14 +34,14 @@ def main():
                     html.Div(data_table.render(app, data=data), style={
                         "padding": "10px",
                         "overflow": "auto",
-                        "height": "calc(100vh - 80px)",
-                        "backgroundColor": "#44444E",
+                        "height": "calc(100vh - 64px)",
+                        "backgroundColor": t["panel_bg"],
                     }),
                     html.Div(graph.render(app, data=data), style={
                         "padding": "10px",
                         "overflow": "auto",
-                        "height": "calc(100vh - 80px)",
-                        "backgroundColor": "#2C2C2E",
+                        "height": "calc(100vh - 64px)",
+                        "backgroundColor": t["card_bg"],
                     }),
                 ],
                 style={
@@ -45,11 +49,11 @@ def main():
                     "gridTemplateColumns": "40% 60%",
                     "gap": "12px",
                     "padding": "10px 20px",
-                    "backgroundColor": "#44444E",
+                    "backgroundColor": t["background"],
                 },
             ),
         ],
-        style={"margin": "0", "padding": "0", "boxSizing": "border-box"},
+        style={"margin": "0", "padding": "0", "boxSizing": "border-box", "backgroundColor": t["background"]},
     )
 
     app.run(debug=True)
