@@ -30,6 +30,7 @@ class NetflixDataPreprocessor(Preprocessor):
         self.data = data
         self._handle_missing_values()
         self._handle_datetime()
+        self._one_country()
         return data
 
     def _handle_datetime(self):
@@ -42,6 +43,9 @@ class NetflixDataPreprocessor(Preprocessor):
         self.data["cast"] = self.data["cast"].fillna("No Data")
         self.data["director"] = self.data["director"].fillna("No Data")
 
+    def _one_country(self):
+        self.data["Country"] = self.data["country"].str.split(",").str[0]
+        
 
 class NetflixData:
     def __init__(self, config: NetflixDataConfig, preprocessor: Preprocessor):
