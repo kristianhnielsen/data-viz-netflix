@@ -19,4 +19,10 @@ def render(app: Dash, data: pd.DataFrame):
         filter_action="native",
     )
 
-    return html.Div(children=[html.H2("Data Overview"), table])
+    return html.Div(
+        children=[
+            html.H2("Data Overview", style={"color": "#D3DAD9", "marginTop": "0"}),
+            html.Div(table, style={"height": "100%"}),
+        ],
+        style={"color": "#D3DAD9", "padding": "6px"},
+    )

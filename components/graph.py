@@ -18,9 +18,9 @@ def render(app: Dash, data: pd.DataFrame):
 
     return html.Div(
         [
-            html.H1(children="Movies in ", style={"textAlign": "center"}),
-            dcc.Dropdown(df.Country.unique(), "Canada", id="dropdown-selection"),
-            dcc.Graph(id="graph-content"),
+            html.Div(html.H2("Movies by Year", style={"color": "#D3DAD9", "margin": "0"}), style={"display": "flex", "justifyContent": "space-between", "alignItems": "center"}),
+            dcc.Dropdown(df.Country.unique(), "Canada", id="dropdown-selection", style={"marginTop": "8px"}),
+            dcc.Graph(id="graph-content", style={"height": "calc(100vh - 160px)", "marginTop": "8px"}),
         ],
-        style={"padding": "20px", "backgroundColor": "#2C2C2E"},
+        style={"padding": "20px", "backgroundColor": "#2C2C2E", "height": "100%", "boxSizing": "border-box"},
     )

@@ -22,20 +22,35 @@ def main():
     app.title = "Netflix in Numbers"
 
     # app layout
-    app.layout = [
-        heading.render(),
-        html.Div(
-            children=[
-                data_table.render(app, data=data),
-                graph.render(app, data=data),
-            ],
-            style={
-                "textAlign": "center",
-                "backgroundColor": "#44444E",
-                "padding": "10px",
-            },
-        ),
-    ]
+    app.layout = html.Div(
+        [
+            heading.render(),
+            html.Div(
+                children=[
+                    html.Div(data_table.render(app, data=data), style={
+                        "padding": "10px",
+                        "overflow": "auto",
+                        "height": "calc(100vh - 80px)",
+                        "backgroundColor": "#44444E",
+                    }),
+                    html.Div(graph.render(app, data=data), style={
+                        "padding": "10px",
+                        "overflow": "auto",
+                        "height": "calc(100vh - 80px)",
+                        "backgroundColor": "#2C2C2E",
+                    }),
+                ],
+                style={
+                    "display": "grid",
+                    "gridTemplateColumns": "40% 60%",
+                    "gap": "12px",
+                    "padding": "10px 20px",
+                    "backgroundColor": "#44444E",
+                },
+            ),
+        ],
+        style={"margin": "0", "padding": "0", "boxSizing": "border-box"},
+    )
 
     app.run(debug=True)
 
