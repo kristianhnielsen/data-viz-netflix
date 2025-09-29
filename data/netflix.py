@@ -45,7 +45,25 @@ class NetflixDataPreprocessor(Preprocessor):
 
     def _one_country(self):
         self.data["Country"] = self.data["country"].str.split(",").str[0]
-        
+
+    def _cast_types(self):
+        # Check if has OMDB data by checking if data has the column "imdbVotes"
+        has_omdb = "imdbVotes" in self.data.columns
+
+        if has_omdb:
+            # imdbVotes
+            self.data["imdbVotes"] = self.data["imdbVotes"].str.split(",").str.join("")
+            self.data["imdbVotes"] = self.data["imdbVotes"].fillna(0)
+            self.data["imdbVotes"] = self.data["imdbVotes"].astype(int, errors="ignore")
+
+            # Metascore
+            self.data["Metascore"] = self.data["Metascore"].astype(int, errors="ignore")
+
+    def _rename_cols(self):
+        # Poster
+        self.data["poster"] = self.data["Poster"]
+        self.data.drop(columns=["Poster"])
+
 
 class NetflixData:
     def __init__(self, config: NetflixDataConfig, preprocessor: Preprocessor):
