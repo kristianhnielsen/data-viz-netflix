@@ -28,25 +28,74 @@ class Preprocessor(ABC):
 class NetflixDataPreprocessor(Preprocessor):
     def process_data(self, data: pd.DataFrame):
         self.data = data
-        self._handle_missing_values()
+        self._drop_cols()
+        self._rename_cols()
+
         self._handle_datetime()
-        self._one_country()
-        return data
+        self._handle_missing_values()
+        self._cast_types()
+        return self.data
+
+    def _rename_cols(self):
+        self.data.rename(
+            columns={
+                "Poster": "poster",
+                "imdbVotes": "imdb_votes",
+                "imdbRating": "imdb_rating",
+                "imdbID": "imdb_id",
+                "Metascore": "metascore",
+                "Metascore": "metascore",
+                "Actors": "cast",
+                "Awards": "awards",
+                "Language": "language",
+                "Genre": "genre",
+                "country": "country_secondary",
+                "Country": "country_primary",
+                "totalSeasons": "seasons",
+                "Released": "release_date",
+                "Runtime": "runtime",
+            },
+            inplace=True,
+        )
+
+    def _drop_cols(self):
+        self.data.drop(
+            columns=[
+                "Response",
+                "Error",
+                "DVD",
+                "BoxOffice",
+                "Production",
+                "Website",
+                "Title",
+                "Rated",
+                "Director",
+                "Writer",
+                "cast",
+                "Type",
+                "Plot",
+                "Ratings",
+                "date_added",
+                "show_id",
+                "duration",
+            ],
+            inplace=True,
+        )
 
     def _handle_datetime(self):
-        self.data["date_added"] = pd.to_datetime(self.data["date_added"].str.strip())
-        self.data["month_added"] = self.data["date_added"].dt.month
-        self.data["month_name_added"] = self.data["date_added"].dt.month_name()
-        self.data["year_added"] = self.data["date_added"].dt.year
+        self.data["release_date"] = pd.to_datetime(self.data["release_date"])
+        self.data["release_year"] = self.data["release_date"].dt.year
+        self.data["release_month"] = self.data["release_date"].dt.month
 
     def _handle_missing_values(self):
         self.data["cast"] = self.data["cast"].fillna("No Data")
         self.data["director"] = self.data["director"].fillna("No Data")
 
-    def _one_country(self):
-        self.data["Country"] = self.data["country"].str.split(",").str[0]
-
     def _cast_types(self):
+        self.data["release_year"] = self.data["release_year"].fillna(0)
+        self.data["release_month"] = self.data["release_month"].fillna(0)
+        self.data["release_year"] = self.data["release_year"].astype(int)
+        self.data["release_month"] = self.data["release_month"].astype(int)
         # Check if has OMDB data by checking if data has the column "imdbVotes"
         has_omdb = "imdbVotes" in self.data.columns
 
@@ -59,16 +108,13 @@ class NetflixDataPreprocessor(Preprocessor):
             # Metascore
             self.data["Metascore"] = self.data["Metascore"].astype(int, errors="ignore")
 
-    def _rename_cols(self):
-        # Poster
-        self.data["poster"] = self.data["Poster"]
-        self.data.drop(columns=["Poster"])
-
 
 class NetflixData:
     def __init__(self, config: NetflixDataConfig, preprocessor: Preprocessor):
         self.config = config
-        self.data = preprocessor.process_data(self._load_data())
+
+        self.data = self._load_data()
+        self.data = preprocessor.process_data(self.data)
 
     def to_csv(self, path: str):
         self.data.to_csv(path, index=False)
