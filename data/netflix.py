@@ -33,6 +33,7 @@ class NetflixDataPreprocessor(Preprocessor):
 
         self._handle_datetime()
         self._handle_missing_values()
+        self._normalize_countries()
         self._cast_types()
         return self.data
 
@@ -90,6 +91,27 @@ class NetflixDataPreprocessor(Preprocessor):
     def _handle_missing_values(self):
         self.data["cast"] = self.data["cast"].fillna("No Data")
         self.data["director"] = self.data["director"].fillna("No Data")
+
+    def _normalize_countries(self):
+        country_mapping = {
+            "UK": "United Kingdom",
+            "USA": "United States",
+            "US": "United States",
+        }
+
+        def __normalize_country_entry(entry):
+            if pd.isna(entry):
+                return entry
+
+            countries = [country.strip() for country in str(entry).split(",")]
+            normalized_countries = [
+                country_mapping.get(country, country) for country in countries
+            ]
+            return ", ".join(normalized_countries)
+
+        self.data["country_primary"] = self.data["country_primary"].apply(
+            __normalize_country_entry
+        )
 
     def _cast_types(self):
         self.data["release_year"] = self.data["release_year"].fillna(0)
