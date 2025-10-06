@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
+import numpy as np
 import pandas as pd
 import requests
 from urllib.parse import urljoin, quote_plus
@@ -33,6 +34,7 @@ class NetflixDataPreprocessor(Preprocessor):
 
         self._handle_datetime()
         self._handle_missing_values()
+        self._split_countries()
         self._normalize_countries()
         self._cast_types()
         return self.data
@@ -111,6 +113,14 @@ class NetflixDataPreprocessor(Preprocessor):
 
         self.data["country_primary"] = self.data["country_primary"].apply(
             __normalize_country_entry
+        )
+
+    def _split_countries(self):
+        countries = self.data["country_primary"].str.split(",")
+        self.data["country_primary"] = countries.str[0]
+        self.data["country_secondary"] = countries.str[1:].str.join(",").str.strip()
+        self.data["country_secondary"] = self.data["country_secondary"].replace(
+            "", np.nan
         )
 
     def _cast_types(self):
