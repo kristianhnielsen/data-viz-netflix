@@ -5,6 +5,7 @@
 - **Run App**: `uv run python main.py`
 - **Install Dependencies**: `uv add <package>`
 - **No formal test suite** - manually test via running the app
+- **Do not perform any git actions** - no commits, branches, or PRs
 
 ## Code Style & Conventions
 - **Python 3.13+** required
