@@ -118,12 +118,7 @@ def _(netflix_data, plt, sns, top_x_countries):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    # What to plot?
-
-    """
-    )
+    mo.md(r"""# What to plot?""")
     return
 
 
@@ -139,7 +134,7 @@ def _(mo):
      - Top genres by number of titles
      - Top directors by number of titles
      - Correlation between movie duration and release year
-     - Number of titles by country 
+     - Number of titles by country
     """
     )
     return
