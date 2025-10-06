@@ -1,8 +1,8 @@
 from dash import Dash, html, dcc, callback, Output, Input
 import pandas as pd
-from components import data_table, graph, map
 from static import heading
 from data import netflix
+from components import explore_by_country
 
 
 def main():
@@ -30,42 +30,7 @@ def main():
         [
             heading.render(),
             html.Div(
-                children=[
-                    html.Div(
-                        data_table.render(app, data=data),
-                        style={
-                            "padding": "10px",
-                            "overflow": "auto",
-                            "height": "calc(100vh - 64px)",
-                            "backgroundColor": t["panel_bg"],
-                        },
-                    ),
-                    html.Div(
-                        graph.render(app, data=data),
-                        style={
-                            "padding": "10px",
-                            "overflow": "auto",
-                            "height": "calc(100vh - 64px)",
-                            "backgroundColor": t["card_bg"],
-                        },
-                    ),
-                    html.Div(
-                        map.render(app, data=data),
-                        style={
-                            "padding": "10px",
-                            "overflow": "auto",
-                            "height": "calc(100vh - 64px)",
-                            "backgroundColor": t["card_bg"],
-                        },
-                    ),
-                ],
-                style={
-                    "display": "grid",
-                    "gridTemplateColumns": "40% 60%",
-                    "gap": "12px",
-                    "padding": "10px 20px",
-                    "backgroundColor": t["background"],
-                },
+                children=[explore_by_country.render(app, data)],
             ),
         ],
         style={
