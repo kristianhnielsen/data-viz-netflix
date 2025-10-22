@@ -86,13 +86,13 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         # Create heatmap of genres over time
         # Split genres and create a row for each genre
         genre_data = []
-        for _, row in country_df.iterrows():
-            if pd.notna(row["genre"]):
-                genres = [g.strip() for g in row["genre"].split(",")]
+        for row in country_df.itertuples(index=False):
+            if pd.notna(row.genre):
+                genres = [g.strip() for g in row.genre.split(",")]
                 for genre in genres:
                     genre_data.append(
                         {
-                            "release_year": row["release_year"],
+                            "release_year": row.release_year,
                             "genre": genre,
                         }
                     )
