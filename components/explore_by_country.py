@@ -87,7 +87,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         # Split genres and create a row for each genre
         genre_data = []
         for row in country_df.itertuples(index=False):
-            if pd.notna(row.genre):
+            if pd.notna(row.genre) and isinstance(row.genre, str):
                 genres = [g.strip() for g in row.genre.split(",")]
                 for genre in genres:
                     genre_data.append(
