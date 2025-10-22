@@ -3,6 +3,7 @@ import pandas as pd
 from components import data_table, graph, map, duration
 from static import heading
 from data import netflix
+from components import explore_by_country
 
 
 def main():
