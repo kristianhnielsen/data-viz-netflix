@@ -47,7 +47,6 @@ class NetflixDataPreprocessor(Preprocessor):
                 "imdbRating": "imdb_rating",
                 "imdbID": "imdb_id",
                 "Metascore": "metascore",
-                "Metascore": "metascore",
                 "Actors": "cast",
                 "Awards": "awards",
                 "Language": "language",
@@ -78,7 +77,6 @@ class NetflixDataPreprocessor(Preprocessor):
                 "Type",
                 "Plot",
                 "Ratings",
-                "date_added",
                 "show_id",
                 "duration",
             ],
@@ -89,6 +87,12 @@ class NetflixDataPreprocessor(Preprocessor):
         self.data["release_date"] = pd.to_datetime(self.data["release_date"])
         self.data["release_year"] = self.data["release_date"].dt.year
         self.data["release_month"] = self.data["release_date"].dt.month
+
+        # Process date_added column for calendar heatmap
+        if "date_added" in self.data.columns:
+            self.data["date_added"] = pd.to_datetime(
+                self.data["date_added"], errors="coerce"
+            )
 
     def _handle_missing_values(self):
         self.data["cast"] = self.data["cast"].fillna("No Data")

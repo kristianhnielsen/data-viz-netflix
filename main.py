@@ -1,5 +1,6 @@
 from dash import Dash, html, dcc, callback, Output, Input
 import pandas as pd
+from components import data_table, graph, map, duration
 from static import heading
 from data import netflix
 from components import explore_by_country
@@ -29,9 +30,7 @@ def main():
     app.layout = html.Div(
         [
             heading.render(),
-            html.Div(
-                children=[explore_by_country.render(app, data)],
-            ),
+            duration.render(app, data),
         ],
         style={
             "margin": "0",

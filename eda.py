@@ -118,12 +118,7 @@ def _(netflix_data, plt, sns, top_x_countries):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    # What to plot?
-
-    """
-    )
+    mo.md(r"""# What to plot?""")
     return
 
 
@@ -133,13 +128,13 @@ def _(mo):
         r"""
     Ideas for different visualization:
 
-     - Distribution of movie ratings (e.g., G, PG, PG-13, R)
-     - Number of titles added per year
+     - Distribution of movie ratings (e.g., G, PG, PG-13, R) - DONE!
+     - Number of titles added per year - DONE!
      - Distribution of movie durations
      - Top genres by number of titles
      - Top directors by number of titles
-     - Correlation between movie duration and release year
-     - Number of titles by country 
+     - Correlation between movie duration and release year - DONE!
+     - Number of titles by country
     """
     )
     return
