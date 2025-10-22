@@ -1,9 +1,7 @@
-from dash import Dash, html, dcc, callback, Output, Input
-import pandas as pd
-from components import data_table, graph, map, duration
+from dash import Dash, html
+from components import duration, explore_by_country
 from static import heading
 from data import netflix
-from components import explore_by_country
 
 
 def main():
@@ -31,6 +29,7 @@ def main():
         [
             heading.render(),
             duration.render(app, data),
+            explore_by_country.render(app, data),
         ],
         style={
             "margin": "0",
