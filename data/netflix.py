@@ -128,10 +128,12 @@ class NetflixDataPreprocessor(Preprocessor):
         )
 
     def _cast_types(self):
-        self.data["release_year"] = self.data["release_year"].fillna(0)
-        self.data["release_month"] = self.data["release_month"].fillna(0)
-        self.data["release_year"] = self.data["release_year"].astype(int)
-        self.data["release_month"] = self.data["release_month"].astype(int)
+        self.data["release_year"] = self.data["release_year"].astype(
+            int, errors="ignore"
+        )
+        self.data["release_month"] = self.data["release_month"].astype(
+            int, errors="ignore"
+        )
         # Check if has OMDB data by checking if data has the column "imdbVotes"
         has_omdb = "imdbVotes" in self.data.columns
 
