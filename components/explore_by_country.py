@@ -7,7 +7,6 @@ from static import theme
 
 def render(app: Dash, data: pd.DataFrame) -> html.Div:
     t = theme.THEME
-    netflix_continuous = [t["background"], t["panel_bg"]]
     # Filter out very small counts to focus on main countries and ensure better color scaling
     country_data = data["country_primary"].value_counts().reset_index(name="count")
 
@@ -16,7 +15,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         locations="country_primary",
         locationmode="country names",
         color="count",
-        color_continuous_scale=netflix_continuous,
+        color_continuous_scale=t["cont_scale"],
         labels={"count": "Number of Titles"},
         range_color=(
             country_data["count"].quantile(0.1),
@@ -41,6 +40,8 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             tick0=country_data["count"].min(),
             dtick=(country_data["count"].max() - country_data["count"].min()) / 5,
         ),
+        plot_bgcolor=t["card_bg"],
+        paper_bgcolor=t["card_bg"],
     )
 
     @callback(
@@ -71,7 +72,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             title=f"Release Year Distribution - {selected_country}",
             labels={"release_year": "Release Year", "count": "Number of Titles"},
             color="release_year",
-            color_continuous_scale=netflix_continuous,
+            color_continuous_scale=t["cont_scale"],
         )
 
         hist_fig.update_layout(
@@ -81,6 +82,8 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             yaxis_title="Number of Titles",
             showlegend=False,
             coloraxis_showscale=False,  # Hide the colorbar since year is already on x-axis
+            plot_bgcolor=t["card_bg"],
+            paper_bgcolor=t["card_bg"],
         )
 
         # Create heatmap of genres over time
@@ -116,7 +119,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 pivot_data,
                 labels=dict(x="Release Year", y="Genre", color="Count"),
                 title=f"Genre Distribution Over Time - {selected_country}",
-                color_continuous_scale=netflix_continuous,
+                color_continuous_scale=t["cont_scale"],
                 aspect="auto",
             )
 
@@ -125,6 +128,8 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 title_x=0.5,
                 xaxis_title="Release Year",
                 yaxis_title="Genre",
+                plot_bgcolor=t["card_bg"],
+                paper_bgcolor=t["card_bg"],
             )
         else:
             # Empty heatmap if no data

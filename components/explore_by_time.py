@@ -1,9 +1,51 @@
 # Movie Duration vs Year
 from dash import Dash, html, dcc, callback, Output, Input
 import plotly.express as px
-import plotly.graph_objects as go
 import pandas as pd
 from static import theme
+
+
+def get_colors_from_scale(scale_data: str | list, num_colors: int) -> list:
+    """
+    Extract colors from a Plotly colorscale or use categorical colors.
+
+    Args:
+        scale_data: Either a Plotly colorscale name (str) or a list of colors
+        num_colors: Number of colors to extract
+
+    Returns:
+        List of color strings
+    """
+    import plotly.colors as pc
+
+    # If it's already a list of colors (categorical), return subset
+    if isinstance(scale_data, list):
+        # If first item is a list (sequential scale format), extract from it
+        if scale_data and isinstance(scale_data[0], list):
+            colorscale = scale_data
+            colors = []
+            for i in range(num_colors):
+                ratio = i / (num_colors - 1) if num_colors > 1 else 0
+                closest_idx = min(
+                    range(len(colorscale)), key=lambda j: abs(colorscale[j][0] - ratio)
+                )
+                colors.append(colorscale[closest_idx][1])
+            return colors
+        else:
+            # It's a categorical color list, cycle through if needed
+            return [scale_data[i % len(scale_data)] for i in range(num_colors)]
+
+    # It's a named Plotly colorscale string
+    colorscale = pc.get_colorscale(scale_data)
+    colors = []
+    for i in range(num_colors):
+        ratio = i / (num_colors - 1) if num_colors > 1 else 0
+        closest_idx = min(
+            range(len(colorscale)), key=lambda j: abs(colorscale[j][0] - ratio)
+        )
+        colors.append(colorscale[closest_idx][1])
+
+    return colors
 
 
 def render(app: Dash, data: pd.DataFrame):
@@ -38,6 +80,11 @@ def render(app: Dash, data: pd.DataFrame):
             fig = px.scatter(
                 title=f"Movie Duration from {year_range[0]} to {year_range[1]} (No Data Available)",
                 labels={"x": "Release Year", "y": "Duration (minutes)"},
+                color_continuous_scale=t["cont_scale"],
+            )
+            fig.update_layout(
+                plot_bgcolor=t["card_bg"],
+                paper_bgcolor=t["card_bg"],
             )
         else:
             fig = px.scatter(
@@ -57,18 +104,20 @@ def render(app: Dash, data: pd.DataFrame):
                 },
             )
 
-            # Customize hover template for better readability
+            # Apply theme color to markers
             fig.update_traces(
+                marker=dict(color=t["plot_color"]),
                 hovertemplate="<b>%{customdata[0]}</b><br>"  # Movie title
                 + "Release Year: %{x}<br>"
                 + "Duration: %{y} minutes<br>"
                 + "Rating: %{customdata[3]}<br>"
-                + "<extra></extra>"  # Remove trace box
+                + "<extra></extra>",  # Remove trace box
             )
-        fig.update_layout(
-            plot_bgcolor=t["card_bg"],
-            paper_bgcolor=t["card_bg"],
-        )
+
+            fig.update_layout(
+                plot_bgcolor=t["card_bg"],
+                paper_bgcolor=t["card_bg"],
+            )
         return fig
 
     @callback(
@@ -84,35 +133,33 @@ def render(app: Dash, data: pd.DataFrame):
 
         if filtered_df.empty:
             # Create empty figure if no data
-            fig = go.Figure()
-            fig.update_layout(
+            fig = px.bar(
                 title=f"Movies Released Per Year ({year_range[0]} - {year_range[1]}) - No Data Available",
-                xaxis_title="Release Year",
-                yaxis_title="Number of Movies",
-                plot_bgcolor=t["card_bg"],
-                paper_bgcolor=t["card_bg"],
+                labels={"x": "Release Year", "y": "Number of Movies"},
             )
+            fig.update_traces(marker=dict(color=t["plot_color"]))
         else:
             # Count movies per year
             movies_per_year = filtered_df["release_year"].value_counts().sort_index()
+            movies_df = movies_per_year.reset_index()
+            movies_df.columns = ["release_year", "count"]
 
-            fig = go.Figure(
-                data=[
-                    go.Bar(
-                        x=movies_per_year.index,
-                        y=movies_per_year.values,
-                        name="Movies Released",
-                        hovertemplate="<b>Year: %{x}</b><br>"
-                        + "Movies Released: %{y}<br>"
-                        + "<extra></extra>",
-                    )
-                ]
+            fig = px.bar(
+                movies_df,
+                x="release_year",
+                y="count",
+                title=f"Movies Released Per Year ({year_range[0]} - {year_range[1]})",
+                labels={"release_year": "Release Year", "count": "Number of Movies"},
+            )
+
+            fig.update_traces(
+                marker=dict(color=t["plot_color"]),
+                hovertemplate="<b>Year: %{x}</b><br>"
+                + "Movies Released: %{y}<br>"
+                + "<extra></extra>",
             )
 
             fig.update_layout(
-                title=f"Movies Released Per Year ({year_range[0]} - {year_range[1]})",
-                xaxis_title="Release Year",
-                yaxis_title="Number of Movies",
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
                 showlegend=False,
@@ -133,9 +180,10 @@ def render(app: Dash, data: pd.DataFrame):
 
         if filtered_df.empty:
             # Create empty figure if no data
-            fig = go.Figure()
-            fig.update_layout(
+            fig = px.pie(
                 title=f"Movie Rating Distribution ({year_range[0]} - {year_range[1]}) - No Data Available",
+            )
+            fig.update_layout(
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
             )
@@ -156,21 +204,28 @@ def render(app: Dash, data: pd.DataFrame):
                 final_ratings = top_ratings
 
             # Create pie chart for rating distribution
-            fig = go.Figure(
-                data=[
-                    go.Pie(
-                        labels=final_ratings.index,
-                        values=final_ratings.values,
-                        hovertemplate="<b>%{label}</b><br>"
-                        + "Count: %{value}<br>"
-                        + "Percentage: %{percent}<br>"
-                        + "<extra></extra>",
-                        textinfo="label+percent",
-                        textposition="auto",
-                        textfont=dict(size=14),  # Larger text
-                        hole=0.3,  # Create a donut chart for better aesthetics
-                    )
-                ]
+            rating_df = final_ratings.reset_index()
+            rating_df.columns = ["rating", "count"]
+
+            fig = px.pie(
+                rating_df,
+                values="count",
+                names="rating",
+                title=f"Movie Rating Distribution ({year_range[0]} - {year_range[1]})",
+                hole=0.3,  # Create a donut chart for better aesthetics
+                color_discrete_sequence=t[
+                    "categorical_colors"
+                ],  # Use colorblind-safe categorical colors
+            )
+
+            fig.update_traces(
+                hovertemplate="<b>%{label}</b><br>"
+                + "Count: %{value}<br>"
+                + "Percentage: %{percent}<br>"
+                + "<extra></extra>",
+                textinfo="label+percent",
+                textposition="auto",
+                textfont=dict(size=14),
             )
 
             fig.update_layout(
@@ -218,9 +273,11 @@ def render(app: Dash, data: pd.DataFrame):
 
             if filtered_df.empty:
                 # Create empty figure if no valid dates
-                fig = go.Figure()
-                fig.update_layout(
+                fig = px.imshow(
+                    [[0]],
                     title="Content Addition Calendar - No Valid Date Data",
+                )
+                fig.update_layout(
                     plot_bgcolor=t["card_bg"],
                     paper_bgcolor=t["card_bg"],
                     height=500,
@@ -244,9 +301,8 @@ def render(app: Dash, data: pd.DataFrame):
 
             # Create a pivot table for the heatmap
             # Count content additions by month and day
-            heatmap_data = (
-                filtered_df.groupby(["month", "day"]).size().reset_index(name="count")
-            )
+            heatmap_data = filtered_df.groupby(["month", "day"], as_index=False).size()
+            heatmap_data.rename(columns={"size": "count"}, inplace=True)
 
             # Create a complete grid for all months and days
             months = range(1, 13)
@@ -291,22 +347,21 @@ def render(app: Dash, data: pd.DataFrame):
                 "Dec",
             ]
 
-            fig = go.Figure(
-                data=go.Heatmap(
-                    z=pivot_table.values,
-                    x=month_names,
-                    y=list(range(1, 32)),
-                    colorscale="Blues",
-                    hoverongaps=False,
-                    hovertemplate=(
-                        "<b>%{x} %{y}</b><br>"
-                        + "Content Added: %{z}<br>"
-                        + "<extra></extra>"
-                    ),
-                    colorbar=dict(
-                        title="Content Count",
-                    ),
-                )
+            fig = px.imshow(
+                pivot_table.values,
+                x=month_names,
+                y=list(range(1, 32)),
+                color_continuous_scale=t["cont_scale"],
+                title=f"Netflix Content Addition Calendar - {content_type}",
+                labels={"x": "Month", "y": "Day of Month", "color": "Content Count"},
+            )
+
+            fig.update_traces(
+                hovertemplate=(
+                    "<b>%{x} %{y}</b><br>"
+                    + "Content Added: %{z}<br>"
+                    + "<extra></extra>"
+                ),
             )
 
             fig.update_layout(
@@ -320,8 +375,7 @@ def render(app: Dash, data: pd.DataFrame):
                 yaxis_title="Day of Month",
                 yaxis=dict(
                     dtick=1,
-                    range=[0.5, 31.5],
-                    autorange="reversed",  # Day 1 at top
+                    range=[30.5, -0.5],  # Reversed range for imshow
                 ),
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
@@ -332,9 +386,11 @@ def render(app: Dash, data: pd.DataFrame):
 
         else:
             # Create empty figure if no date_added column
-            fig = go.Figure()
-            fig.update_layout(
+            fig = px.imshow(
+                [[0]],
                 title="Content Addition Calendar - No Date Data Available",
+            )
+            fig.update_layout(
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
                 height=500,
