@@ -65,17 +65,18 @@ def render(app: Dash, data: pd.DataFrame):
         if "runtime" in filtered_df.columns:
             # Extract minutes from runtime strings like "90 min"
             filtered_df = filtered_df.copy()
+            runtime_series = pd.Series(filtered_df["runtime"])
             filtered_df["duration_minutes"] = (
-                filtered_df["runtime"].str.extract(r"(\d+)").astype(float)
+                pd.to_numeric(runtime_series.str.extract(r"(\d+)")[0], errors="coerce")
             )
 
             # Remove rows where duration couldn't be extracted
-            filtered_df = filtered_df.dropna(subset=["duration_minutes"])
+            filtered_df = filtered_df[pd.notna(filtered_df["duration_minutes"])]
         else:
             # Fallback if runtime column doesn't exist
             filtered_df = pd.DataFrame()
 
-        if filtered_df.empty:
+        if len(filtered_df) == 0:
             # Create empty figure if no data
             fig = px.scatter(
                 title=f"Movie Duration from {year_range[0]} to {year_range[1]} (No Data Available)",
@@ -131,7 +132,7 @@ def render(app: Dash, data: pd.DataFrame):
             & (df["type"] == "Movie")
         ]
 
-        if filtered_df.empty:
+        if len(filtered_df) == 0:
             # Create empty figure if no data
             fig = px.bar(
                 title=f"Movies Released Per Year ({year_range[0]} - {year_range[1]}) - No Data Available",
@@ -140,7 +141,7 @@ def render(app: Dash, data: pd.DataFrame):
             fig.update_traces(marker=dict(color=t["plot_color"]))
         else:
             # Count movies per year
-            movies_per_year = filtered_df["release_year"].value_counts().sort_index()
+            movies_per_year = pd.Series(filtered_df["release_year"]).value_counts().sort_index()
             movies_df = movies_per_year.reset_index()
             movies_df.columns = ["release_year", "count"]
 
@@ -178,7 +179,7 @@ def render(app: Dash, data: pd.DataFrame):
             & (df["type"] == "Movie")
         ]
 
-        if filtered_df.empty:
+        if len(filtered_df) == 0:
             # Create empty figure if no data
             fig = px.pie(
                 title=f"Movie Rating Distribution ({year_range[0]} - {year_range[1]}) - No Data Available",
@@ -189,7 +190,7 @@ def render(app: Dash, data: pd.DataFrame):
             )
         else:
             # Count ratings, handling missing values
-            rating_counts = filtered_df["rating"].fillna("Not Rated").value_counts()
+            rating_counts = pd.Series(filtered_df["rating"]).fillna("Not Rated").value_counts()
 
             # Group smaller values into "Other" category
             # Keep top 6 ratings, group the rest as "Other"
@@ -252,162 +253,7 @@ def render(app: Dash, data: pd.DataFrame):
 
         return fig
 
-    @callback(
-        Output("content-calendar-heatmap", "figure"),
-        Input("content-type-dropdown", "value"),
-    )
-    def update_content_calendar(content_type):
-        # Filter by content type if specified
-        if content_type == "All":
-            filtered_df = df
-        else:
-            filtered_df = df[df["type"] == content_type]
-
-        # Check if date_added column exists in the dataset
-        if "date_added" in filtered_df.columns:
-            filtered_df = filtered_df.copy()
-            # date_added should already be processed in the data preprocessing
-
-            # Remove rows with invalid dates
-            filtered_df = filtered_df.dropna(subset=["date_added"])
-
-            if filtered_df.empty:
-                # Create empty figure if no valid dates
-                fig = px.imshow(
-                    [[0]],
-                    title="Content Addition Calendar - No Valid Date Data",
-                )
-                fig.update_layout(
-                    plot_bgcolor=t["card_bg"],
-                    paper_bgcolor=t["card_bg"],
-                    height=500,
-                )
-                fig.add_annotation(
-                    text="No valid dates found in dataset",
-                    xref="paper",
-                    yref="paper",
-                    x=0.5,
-                    y=0.5,
-                    xanchor="center",
-                    yanchor="middle",
-                    showarrow=False,
-                    font=dict(size=16),
-                )
-                return fig
-
-            # Extract month and day
-            filtered_df["month"] = filtered_df["date_added"].dt.month
-            filtered_df["day"] = filtered_df["date_added"].dt.day
-
-            # Create a pivot table for the heatmap
-            # Count content additions by month and day
-            heatmap_data = filtered_df.groupby(["month", "day"], as_index=False).size()
-            heatmap_data.rename(columns={"size": "count"}, inplace=True)
-
-            # Create a complete grid for all months and days
-            months = range(1, 13)
-            days = range(1, 32)
-
-            # Create a complete grid with valid dates only
-            full_grid = []
-            for month in months:
-                for day in days:
-                    # Skip invalid dates (like Feb 30, Apr 31, etc.)
-                    try:
-                        pd.Timestamp(year=2024, month=month, day=day)
-                        full_grid.append({"month": month, "day": day})
-                    except ValueError:
-                        continue
-
-            full_grid_df = pd.DataFrame(full_grid)
-
-            # Merge with actual data
-            heatmap_pivot = full_grid_df.merge(
-                heatmap_data, on=["month", "day"], how="left"
-            ).fillna(0)
-
-            # Create pivot table for plotly
-            pivot_table = heatmap_pivot.pivot(
-                index="day", columns="month", values="count"
-            ).fillna(0)
-
-            # Month names for better readability
-            month_names = [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-            ]
-
-            fig = px.imshow(
-                pivot_table.values,
-                x=month_names,
-                y=list(range(1, 32)),
-                color_continuous_scale=t["cont_scale"],
-                title=f"Netflix Content Addition Calendar - {content_type}",
-                labels={"x": "Month", "y": "Day of Month", "color": "Content Count"},
-            )
-
-            fig.update_traces(
-                hovertemplate=(
-                    "<b>%{x} %{y}</b><br>"
-                    + "Content Added: %{z}<br>"
-                    + "<extra></extra>"
-                ),
-            )
-
-            fig.update_layout(
-                title={
-                    "text": f"Netflix Content Addition Calendar - {content_type}",
-                    "x": 0.5,
-                    "xanchor": "center",
-                    "font": {"size": 16},
-                },
-                xaxis_title="Month",
-                yaxis_title="Day of Month",
-                yaxis=dict(
-                    dtick=1,
-                    range=[30.5, -0.5],  # Reversed range for imshow
-                ),
-                plot_bgcolor=t["card_bg"],
-                paper_bgcolor=t["card_bg"],
-                height=500,
-                font=dict(size=11),
-                margin=dict(t=60, b=60, l=60, r=100),
-            )
-
-        else:
-            # Create empty figure if no date_added column
-            fig = px.imshow(
-                [[0]],
-                title="Content Addition Calendar - No Date Data Available",
-            )
-            fig.update_layout(
-                plot_bgcolor=t["card_bg"],
-                paper_bgcolor=t["card_bg"],
-                height=500,
-            )
-            fig.add_annotation(
-                text="No date_added column found in dataset",
-                xref="paper",
-                yref="paper",
-                x=0.5,
-                y=0.5,
-                xanchor="center",
-                yanchor="middle",
-                showarrow=False,
-                font=dict(size=16),
-            )
-
-        return fig
+    
 
     return html.Div(
         [
@@ -442,8 +288,11 @@ def render(app: Dash, data: pd.DataFrame):
                     html.Div(
                         [
                             dcc.Graph(
-                                id="duration-graph",
-                                style={"height": "400px", "marginTop": "8px"},
+                                id="rating-distribution-chart",
+                                style={
+                                    "height": "400px",
+                                    "marginTop": "8px",
+                                },
                             ),
                         ],
                         style={
@@ -473,57 +322,12 @@ def render(app: Dash, data: pd.DataFrame):
                     html.Div(
                         [
                             dcc.Graph(
-                                id="rating-distribution-chart",
+                                id="duration-graph",
                                 style={
                                     "height": "600px",
                                     "marginTop": "8px",
-                                },  # Increased height
-                            ),
-                        ],
-                        style={
-                            "width": "100%",
-                            "display": "inline-block",
-                        },
-                    ),
-                ],
-            ),
-            html.Div(
-                [
-                    html.Div(
-                        [
-                            html.H3(
-                                "Content Addition Calendar",
-                                style={"margin": "0 0 10px 0"},
-                            ),
-                            html.Div(
-                                [
-                                    html.Label(
-                                        "Content Type:",
-                                        style={
-                                            "marginRight": "10px",
-                                            "fontWeight": "bold",
-                                        },
-                                    ),
-                                    dcc.Dropdown(
-                                        id="content-type-dropdown",
-                                        options=[
-                                            {"label": "All Content", "value": "All"},
-                                            {"label": "Movies", "value": "Movie"},
-                                            {"label": "TV Shows", "value": "TV Show"},
-                                        ],
-                                        value="All",
-                                        style={"width": "150px"},
-                                    ),
-                                ],
-                                style={
-                                    "display": "flex",
-                                    "alignItems": "center",
-                                    "marginBottom": "10px",
                                 },
                             ),
-                            dcc.Graph(
-                                id="content-calendar-heatmap", style={"height": "500px"}
-                            ),
                         ],
                         style={
                             "width": "100%",
@@ -531,8 +335,8 @@ def render(app: Dash, data: pd.DataFrame):
                         },
                     ),
                 ],
-                style={"marginTop": "20px"},
             ),
+            
         ],
         style={
             "padding": "20px",
