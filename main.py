@@ -1,5 +1,5 @@
 from dash import Dash, html
-from components import duration, explore_by_country
+from components import explore_by_time, explore_by_country
 from static import heading
 from data import netflix
 
@@ -28,7 +28,7 @@ def main():
     app.layout = html.Div(
         [
             heading.render(),
-            duration.render(app, data),
+            explore_by_time.render(app, data),
             explore_by_country.render(app, data),
         ],
         style={
