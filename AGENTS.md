@@ -18,7 +18,7 @@
 
 ## Project Structure
 - `main.py` - Entry point with Dash app setup
-- `components/` - Reusable UI components (data_table.py, graph.py)
+- `components/` - Reusable UI components 
 - `static/` - Shared utilities (theme.py, heading.py)
 - `data/` - Data processing classes and CSV files
 - Use relative imports from project root
