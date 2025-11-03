@@ -1,12 +1,11 @@
 from dash import Dash, html
-from components import explore_by_time, explore_by_country
-from static import heading
+from components import explore_by_time, explore_by_country, ratings_comparison, genre_analysis, user_guide
+from static import heading, navigation
 from data import netflix
 
 
 def main():
     # data import and preprocessing
-
     config = netflix.NetflixDataConfig(
         netflix_titles_path="data/netflix_titles.csv", omdb_path="data/omdb_data.csv"
     )
@@ -18,7 +17,7 @@ def main():
 
     # app setup
     app = Dash(__name__)
-    app.title = "Netflix in Numbers"
+    app.title = "Netflix in Numbers - Interactive Data Visualization"
 
     # app layout
     from static import theme
@@ -28,14 +27,51 @@ def main():
     app.layout = html.Div(
         [
             heading.render(),
-            explore_by_time.render(app, data),
-            explore_by_country.render(app, data),
+            navigation.render(),
+            
+            # User Guide Section
+            html.Div(id="user-guide", children=[
+                user_guide.render()
+            ]),
+            
+            # Temporal Analysis Section
+            html.Div(id="temporal-analysis", children=[
+                explore_by_time.render(app, data)
+            ]),
+            
+            # Geographic Analysis Section  
+            html.Div(id="country-analysis", children=[
+                explore_by_country.render(app, data)
+            ]),
+            
+            # Ratings Comparison Section
+            html.Div(id="ratings-analysis", children=[
+                ratings_comparison.render(app, data)
+            ]),
+            
+            # Genre Analysis Section
+            html.Div(id="genre-analysis", children=[
+                genre_analysis.render(app, data)
+            ]),
+            
+            # Footer
+            html.Div([
+                html.P(
+                    "© 2024 Netflix Data Visualization Project | DSK808 Course",
+                    style={"textAlign": "center", "margin": "20px 0", "color": t["text_secondary"]}
+                )
+            ], style={
+                "backgroundColor": t["background"],
+                "padding": "20px 0",
+                "marginTop": "40px"
+            })
         ],
         style={
             "margin": "0",
             "padding": "0",
             "boxSizing": "border-box",
             "backgroundColor": t["background"],
+            "minHeight": "100vh"
         },
     )
 
