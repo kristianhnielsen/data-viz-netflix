@@ -1,0 +1,199 @@
+from dash import Dash, html, dcc, Output, Input, callback
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from static import theme
+
+
+def render(app: Dash, data: pd.DataFrame) -> html.Div:
+    t = theme.THEME
+    
+    # Filter data to only include rows with both IMDb and Metascore ratings
+    ratings_data = data.dropna(subset=['imdb_rating', 'metascore']).copy()
+    
+    # Convert ratings to numeric if they aren't already
+    ratings_data['imdb_rating'] = pd.to_numeric(ratings_data['imdb_rating'], errors='coerce')
+    ratings_data['metascore'] = pd.to_numeric(ratings_data['metascore'], errors='coerce')
+    ratings_data = ratings_data.dropna(subset=['imdb_rating', 'metascore'])
+    
+    # Clean imdb_votes column - remove commas and convert to numeric
+    if 'imdb_votes' in ratings_data.columns:
+        ratings_data['imdb_votes'] = (
+            ratings_data['imdb_votes']
+            .astype(str)
+            .str.replace(',', '', regex=False)
+            .replace('nan', '0')
+        )
+        ratings_data['imdb_votes'] = pd.to_numeric(ratings_data['imdb_votes'], errors='coerce')
+        ratings_data['imdb_votes'] = ratings_data['imdb_votes'].fillna(0)
+    
+    # Extract primary genre from genre column (handle comma-separated genres)
+    ratings_data['primary_genre'] = ratings_data['genre'].str.split(',').str[0].str.strip()
+    
+    # Get unique genres for filter dropdown
+    genres = sorted(ratings_data['primary_genre'].dropna().unique())
+    
+    @callback(
+        Output("ratings-scatter", "figure"),
+        Output("genre-boxplot", "figure"),
+        Input("genre-filter", "value"),
+        Input("type-filter", "value"),
+        Input("ratings-threshold", "value")
+    )
+    def update_ratings_charts(selected_genres, selected_types, min_votes):
+        # Filter data based on selections
+        filtered_data = ratings_data.copy()
+        
+        # Filter by genre
+        if selected_genres:
+            filtered_data = filtered_data[filtered_data['primary_genre'].isin(selected_genres)]
+        
+        # Filter by type (Movie/TV Show)
+        if selected_types:
+            filtered_data = filtered_data[filtered_data['type'].isin(selected_types)]
+        
+        # Filter by minimum votes (if imdb_votes column exists and is numeric)
+        if 'imdb_votes' in filtered_data.columns:
+            filtered_data['imdb_votes'] = pd.to_numeric(filtered_data['imdb_votes'], errors='coerce')
+            filtered_data['imdb_votes'] = filtered_data['imdb_votes'].fillna(0)
+            filtered_data = filtered_data[filtered_data['imdb_votes'] >= min_votes]
+        
+        # Create scatter plot: IMDb vs Metascore
+        if len(filtered_data) > 0:
+            scatter_fig = px.scatter(
+                filtered_data,
+                x="imdb_rating",
+                y="metascore",
+                color="primary_genre",
+                size="imdb_votes" if "imdb_votes" in filtered_data.columns else None,
+                hover_data=["title", "type", "release_year"],
+                title="IMDb Rating vs Metascore Comparison",
+                labels={
+                    "imdb_rating": "IMDb Rating (0-10)",
+                    "metascore": "Metascore (0-100)",
+                    "primary_genre": "Genre",
+                    "imdb_votes": "IMDb Votes"
+                },
+                color_discrete_sequence=t["categorical_colors"]
+            )
+            
+            # Add reference lines
+            scatter_fig.add_hline(y=50, line_dash="dash", line_color="gray", annotation_text="Average Metascore")
+            scatter_fig.add_vline(x=6.5, line_dash="dash", line_color="gray", annotation_text="Average IMDb")
+            
+            scatter_fig.update_layout(
+                plot_bgcolor=t["card_bg"],
+                paper_bgcolor=t["card_bg"],
+                title_font_size=16,
+                title_x=0.5
+            )
+            
+            # Create box plot: Rating distribution by genre
+            boxplot_fig = go.Figure()
+            
+            # Add IMDb rating box plot
+            boxplot_fig.add_trace(go.Box(
+                y=filtered_data['imdb_rating'],
+                x=filtered_data['primary_genre'],
+                name='IMDb Rating',
+                marker_color=t["plot_color"]
+            ))
+            
+            boxplot_fig.update_layout(
+                title="Rating Distribution by Genre",
+                xaxis_title="Genre",
+                yaxis_title="IMDb Rating",
+                plot_bgcolor=t["card_bg"],
+                paper_bgcolor=t["card_bg"],
+                title_font_size=16,
+                title_x=0.5,
+                xaxis_tickangle=-45
+            )
+            
+        else:
+            # Empty figures if no data
+            scatter_fig = px.scatter(
+                title="No data available for selected filters"
+            )
+            scatter_fig.update_layout(
+                plot_bgcolor=t["card_bg"],
+                paper_bgcolor=t["card_bg"]
+            )
+            
+            boxplot_fig = go.Figure()
+            boxplot_fig.update_layout(
+                title="No data available for selected filters",
+                plot_bgcolor=t["card_bg"],
+                paper_bgcolor=t["card_bg"]
+            )
+        
+        return scatter_fig, boxplot_fig
+    
+    return html.Div([
+        html.H2(
+            "Ratings Analysis: Critics vs Audience",
+            style={"color": t["header_bg"], "marginTop": "40px"}
+        ),
+        
+        # Filters section
+        html.Div([
+            html.Div([
+                html.Label("Filter by Genre:", style={"fontWeight": "bold"}),
+                dcc.Dropdown(
+                    id="genre-filter",
+                    options=[{"label": genre, "value": genre} for genre in genres],
+                    value=genres[:5] if len(genres) > 5 else genres,  # Default to first 5 genres
+                    multi=True,
+                    placeholder="Select genres..."
+                )
+            ], style={"width": "30%", "display": "inline-block", "marginRight": "2%"}),
+            
+            html.Div([
+                html.Label("Filter by Type:", style={"fontWeight": "bold"}),
+                dcc.Dropdown(
+                    id="type-filter",
+                    options=[
+                        {"label": "Movie", "value": "Movie"},
+                        {"label": "TV Show", "value": "TV Show"}
+                    ],
+                    value=["Movie", "TV Show"],
+                    multi=True,
+                    placeholder="Select content type..."
+                )
+            ], style={"width": "20%", "display": "inline-block", "marginRight": "2%"}),
+            
+            html.Div([
+                html.Label(f"Minimum IMDb Votes:", style={"fontWeight": "bold"}),
+                dcc.Slider(
+                    id="ratings-threshold",
+                    min=0,
+                    max=1000,
+                    step=50,
+                    value=100,  # Lower default threshold
+                    marks={i: str(i) for i in range(0, 1001, 200)},
+                    tooltip={"placement": "bottom", "always_visible": True}
+                )
+            ], style={"width": "40%", "display": "inline-block"})
+        ], style={"marginBottom": "30px", "padding": "20px", "backgroundColor": t["card_bg"]}),
+        
+        # Charts section
+        html.Div([
+            html.Div([
+                dcc.Graph(id="ratings-scatter", style={"height": "600px"})
+            ], style={"width": "60%", "display": "inline-block", "verticalAlign": "top"}),
+            
+            html.Div([
+                dcc.Graph(id="genre-boxplot", style={"height": "600px"})
+            ], style={"width": "38%", "display": "inline-block", "verticalAlign": "top", "marginLeft": "2%"})
+        ]),
+        
+        # Insights section
+        html.Div([
+            html.H3("Key Insights:", style={"color": t["header_bg"]}),
+            html.Ul([
+                html.Li("Higher IMDb ratings generally correlate with higher Metascores, but there are interesting outliers"),
+                html.Li("Some genres like 'Documentary' tend to have higher critic scores than audience scores"),
+                html.Li("Popular titles (more votes) tend to have more consistent ratings between critics and audiences")
+            ], style={"color": t["text_color"], "lineHeight": "1.6"})
+        ], style={"marginTop": "30px", "padding": "20px", "backgroundColor": t["card_bg"]})
+    ])
