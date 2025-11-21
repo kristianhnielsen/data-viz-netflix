@@ -54,7 +54,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         
         # Filter by minimum votes (if imdb_votes column exists and is numeric)
         if 'imdb_votes' in filtered_data.columns:
-            filtered_data = filtered_data.copy()  # Ensure we're working with a copy
+            # No need to copy again; .loc[] already returns a copy
             filtered_data['imdb_votes'] = pd.to_numeric(filtered_data['imdb_votes'], errors='coerce')
             filtered_data['imdb_votes'] = filtered_data['imdb_votes'].fillna(0)
             filtered_data = filtered_data.loc[filtered_data['imdb_votes'] >= min_votes]
