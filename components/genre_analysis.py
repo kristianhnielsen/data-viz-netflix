@@ -141,7 +141,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             heatmap_data = heatmap_data.rename(columns={0: 'count'})
             
             # Get top countries for better visualization
-            top_countries = filtered_data['country_primary'].value_counts().head(10).index.tolist()
+            top_countries = filtered_data['country_primary'].value_counts().head(10).index
             heatmap_data = heatmap_data.loc[heatmap_data['country_primary'].isin(top_countries)]
             
             heatmap_pivot = heatmap_data.pivot(
