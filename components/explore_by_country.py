@@ -112,8 +112,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
 
             # Group by year and genre to count titles
             grouped_heatmap = genre_df.groupby(["release_year", "genre"]).size()
-            heatmap_data = grouped_heatmap.reset_index()
-            heatmap_data = heatmap_data.rename(columns={0: "count"})
+            heatmap_data = grouped_heatmap.reset_index(name="count")
 
             # Pivot for heatmap
             pivot_data = heatmap_data.pivot(
