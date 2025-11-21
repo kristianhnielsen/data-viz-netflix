@@ -100,8 +100,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         # 2. Genre Timeline
         if len(filtered_data) > 0:
             grouped_timeline = filtered_data.groupby(['release_year', 'type'], observed=True).size()
-            timeline_data = grouped_timeline.reset_index()
-            timeline_data = timeline_data.rename(columns={0: 'count'})
+            timeline_data = grouped_timeline.reset_index(name='count')
             
             timeline_fig = px.bar(
                 timeline_data,
