@@ -71,7 +71,8 @@ def main():
             "padding": "0",
             "boxSizing": "border-box",
             "backgroundColor": t["background"],
-            "minHeight": "100vh"
+            "minHeight": "100vh",
+            "fontFamily": "'Helvetica Neue', Arial, sans-serif"
         },
     )
 
