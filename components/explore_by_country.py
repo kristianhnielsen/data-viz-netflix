@@ -63,9 +63,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         country_df = data.loc[country_mask]
 
         # Create histogram data with bins and use bar chart with continuous color
-        year_counts = country_df.groupby("release_year").size()
-        hist_data = year_counts.reset_index()
-        hist_data.columns = ["release_year", "count"]
+        hist_data = country_df.groupby("release_year").size().reset_index(name="count")
 
         hist_fig = px.bar(
             hist_data,
