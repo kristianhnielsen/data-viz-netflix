@@ -96,13 +96,6 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 title_x=0.5,
                 font=dict(color=t["text_primary"])
             )
-            treemap_fig.update_layout(
-                plot_bgcolor=t["card_bg"],
-                paper_bgcolor=t["card_bg"],
-                title_font_size=16,
-                title_x=0.5,
-                font=dict(color=t["text_primary"])
-            )
         
         # 2. Genre Timeline
         if len(filtered_data) > 0:
