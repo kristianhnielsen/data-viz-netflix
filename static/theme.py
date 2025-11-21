@@ -1,47 +1,62 @@
-# Shared color theme for the dashboard
-# Solution 1: Colorblind-Safe with Netflix Branding
-# - Netflix Red (#E50914) as primary brand color
-# - All colors tested for protanopia, deuteranopia, tritanopia
-# - Based on ColorBrewer2 scientific research
-# - WCAG AA compliant (4.79:1 contrast on white)
+# Netflix-Inspired Dark Theme
+# Sophisticated color palette based on actual Netflix interface
+# Enhanced visual hierarchy with proper elevation levels
+# Optimized for data visualization clarity and user experience
 
 THEME = {
-    # Page Layout
-    "background": "#0f0f0f",  # Very dark (better than pure black for screens)
-    "header_bg": "#E50914",  # Netflix Red
-    "panel_bg": "#E50914",  # Netflix Red
-    "card_bg": "#f5f5f1",  # Off-white (better than pure white)
-    # Sequential Scale (for heatmaps, choropleths - single variable)
-    # Uses red gradient starting from Netflix Red - maintains brand identity
+    # Core Layout Colors
+    "background": "#141414",        # Netflix's actual dark gray (softer than pure black)
+    "surface": "#1f1f1f",           # Card/surface background
+    "surface_elevated": "#2a2a2a",   # Hover/active states
+    "surface_border": "#333333",         # Subtle borders
+    
+    # Brand Colors
+    "primary": "#e50914",             # Netflix red for accents
+    "primary_variant": "#f40612",       # Lighter red for hover states
+    "header_bg": "#e50914",            # Header background
+    
+    # Text Colors
+    "text_primary": "#ffffff",           # Main text
+    "text_secondary": "#b3b3b3",         # Secondary text
+    "text_muted": "#808080",            # Muted/disabled text
+    "text_inverse": "#141414",           # Text on primary color
+    
+    # Data Visualization Colors
+    "card_bg": "#1f1f1f",             # Chart backgrounds
+    "plot_color": "#e50914",            # Single series plots
+    "grid_color": "#404040",             # Chart grid lines
+    
+    # Sequential Scale (for heatmaps, choropleths)
     "cont_scale": [
-        [0.0, "#FEE5D9"],  # Very light peach
-        [0.2, "#FCBBA1"],  # Light peach
-        [0.4, "#FC9272"],  # Medium coral
-        [0.6, "#FB6A4A"],  # Light red
-        [0.8, "#E50914"],  # Netflix Red!
-        [1.0, "#99000D"],  # Dark red
+        [0.0, "#2a2a2a"],              # Dark surface
+        [0.2, "#404040"],              # Medium dark
+        [0.4, "#666666"],              # Medium gray
+        [0.6, "#b3b3b3"],              # Light gray
+        [0.8, "#e50914"],              # Netflix red
+        [1.0, "#ff6b6b"],              # Bright red
     ],
-    # Categorical Colors (for multiple categories, pie charts, grouped bars)
-    # Colorblind-safe palette with Netflix Red as anchor
+    
+    # Categorical Colors (optimized for dark theme)
     "categorical_colors": [
-        "#E50914",  # Netflix Red - primary brand color
-        "#0173B2",  # Blue - safe for colorblind
-        "#029E73",  # Teal/Green - safe for colorblind
-        "#DE8F05",  # Orange - safe for colorblind
-        "#CC78BC",  # Purple - adds diversity
-        "#CA9161",  # Tan/Brown - neutral complement
-        "#FBAFE4",  # Light pink - soft accent
-        "#949494",  # Gray - neutral for "other"
+        "#e50914",  # Netflix Red
+        "#0071e5",  # Bright Blue
+        "#00d474",  # Bright Green
+        "#ffb347",  # Bright Orange
+        "#b469ff",  # Purple
+        "#ff6b9d",  # Pink
+        "#4ecdc4",  # Teal
+        "#95a5a6",  # Gray
     ],
-    # Single plot color (when only one series)
-    "plot_color": "#E50914",  # Netflix Red
-    # Diverging scale (for data with meaningful center point)
+    
+    # Diverging Scale (for correlation data)
     "diverging_scale": [
-        [0.0, "#0173B2"],  # Blue (negative)
-        [0.5, "#F5F5F1"],  # Neutral gray
-        [1.0, "#E50914"],  # Netflix Red (positive)
+        [0.0, "#0071e5"],              # Blue (negative)
+        [0.5, "#666666"],              # Neutral gray
+        [1.0, "#e50914"],              # Netflix red (positive)
     ],
-    # Accessibility
-    "text_color": "#FFFFFF",
-    "text_secondary": "#B3B3B3",
+    
+    # UI Elements
+    "shadow": "rgba(0, 0, 0, 0.3)",       # Subtle shadows
+    "border_radius": "8px",                # Consistent border radius
+    "transition": "all 0.2s ease-in-out",   # Smooth transitions
 }

@@ -1,7 +1,6 @@
-# Movie Duration vs Year
 from dash import Dash, html, dcc, callback, Output, Input
-import plotly.express as px
 import pandas as pd
+import plotly.express as px
 from static import theme
 
 
@@ -48,7 +47,7 @@ def get_colors_from_scale(scale_data: str | list, num_colors: int) -> list:
     return colors
 
 
-def render(app: Dash, data: pd.DataFrame):
+def render(app: Dash, data: pd.DataFrame) -> html.Div:
     df = data
     t = theme.THEME
 
@@ -81,11 +80,17 @@ def render(app: Dash, data: pd.DataFrame):
             fig = px.scatter(
                 title=f"Movie Duration from {year_range[0]} to {year_range[1]} (No Data Available)",
                 labels={"x": "Release Year", "y": "Duration (minutes)"},
-                color_continuous_scale=t["cont_scale"],
             )
             fig.update_layout(
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
+                title_font_size=16,
+                title_x=0.5,
+                xaxis_title="Release Year",
+                yaxis_title="Duration (minutes)",
+                font=dict(color=t["text_primary"]),
+                xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
             )
         else:
             fig = px.scatter(
@@ -118,6 +123,11 @@ def render(app: Dash, data: pd.DataFrame):
             fig.update_layout(
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
+                title_font_size=16,
+                title_x=0.5,
+                font=dict(color=t["text_primary"]),
+                xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
             )
         return fig
 
@@ -139,6 +149,15 @@ def render(app: Dash, data: pd.DataFrame):
                 labels={"x": "Release Year", "y": "Number of Movies"},
             )
             fig.update_traces(marker=dict(color=t["plot_color"]))
+            fig.update_layout(
+                plot_bgcolor=t["card_bg"],
+                paper_bgcolor=t["card_bg"],
+                title_font_size=16,
+                title_x=0.5,
+                font=dict(color=t["text_primary"]),
+                xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+            )
         else:
             # Count movies per year
             movies_per_year = pd.Series(filtered_df["release_year"]).value_counts().sort_index()
@@ -164,6 +183,13 @@ def render(app: Dash, data: pd.DataFrame):
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
                 showlegend=False,
+                title_font_size=16,
+                title_x=0.5,
+                xaxis_title="Release Year",
+                yaxis_title="Number of Movies",
+                font=dict(color=t["text_primary"]),
+                xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
             )
 
         return fig
@@ -187,6 +213,11 @@ def render(app: Dash, data: pd.DataFrame):
             fig.update_layout(
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
+                title_font_size=16,
+                title_x=0.5,
+                font=dict(color=t["text_primary"]),
+                xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
             )
         else:
             # Count ratings, handling missing values
@@ -257,91 +288,54 @@ def render(app: Dash, data: pd.DataFrame):
 
     return html.Div(
         [
-            html.Div(
-                html.H2(
-                    "Netflix Analytics: Duration, Trends, Ratings, Evolution & Calendar",
-                    style={"margin": "0"},
-                ),
+            html.H2(
+                "📈 Content Trends",
                 style={
-                    "display": "flex",
-                    "justifyContent": "space-between",
-                    "alignItems": "center",
+                    "color": t["text_primary"],
+                    "marginBottom": "24px",
+                    "fontWeight": "300"
                 },
-            ),
-            dcc.RangeSlider(
-                id="year-slider",
-                min=int(1940),
-                max=int(2025),
-                value=[int(df["release_year"].min()), int(df["release_year"].max())],
-                marks={
-                    str(year): str(year)
-                    for year in range(
-                        int(df["release_year"].min()),
-                        int(df["release_year"].max()) + 1,
-                        5,
-                    )
-                },
-                step=1,
-            ),
-            html.Div(
-                [
-                    html.Div(
-                        [
-                            dcc.Graph(
-                                id="rating-distribution-chart",
-                                style={
-                                    "height": "400px",
-                                    "marginTop": "8px",
-                                },
-                            ),
-                        ],
-                        style={
-                            "width": "50%",
-                            "display": "inline-block",
-                            "verticalAlign": "top",
-                        },
-                    ),
-                    html.Div(
-                        [
-                            dcc.Graph(
-                                id="movies-per-year-histogram",
-                                style={"height": "400px", "marginTop": "8px"},
-                            ),
-                        ],
-                        style={
-                            "width": "50%",
-                            "display": "inline-block",
-                            "verticalAlign": "top",
-                        },
-                    ),
-                ],
-                style={"marginBottom": "20px"},
-            ),
-            html.Div(
-                [
-                    html.Div(
-                        [
-                            dcc.Graph(
-                                id="duration-graph",
-                                style={
-                                    "height": "600px",
-                                    "marginTop": "8px",
-                                },
-                            ),
-                        ],
-                        style={
-                            "width": "100%",
-                            "display": "inline-block",
-                        },
-                    ),
-                ],
             ),
             
+            # Year Range Filter
+            html.Div([
+                html.Label("Time Period", style={"color": t["text_secondary"], "marginBottom": "12px", "display": "block", "fontSize": "14px"}),
+                dcc.RangeSlider(
+                    id="year-slider",
+                    min=int(1940),
+                    max=int(2025),
+                    value=[int(df["release_year"].min()), int(df["release_year"].max())],
+                    marks={
+                        str(year): str(year)
+                        for year in range(
+                            int(df["release_year"].min()),
+                            int(df["release_year"].max()) + 1,
+                            10,
+                        )
+                    },
+                    step=1,
+                ),
+            ], style={"marginBottom": "32px", "padding": "24px", "backgroundColor": t["surface"], "borderRadius": t["border_radius"], "border": f"1px solid {t['surface_border']}"}),
+            
+            # Charts Grid
+            html.Div(
+                [
+                    html.Div(
+                        [dcc.Graph(id="rating-distribution-chart", style={"height": "350px"})],
+                        style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "16px", "border": f"1px solid {t['surface_border']}"}
+                    ),
+                    html.Div(
+                        [dcc.Graph(id="movies-per-year-histogram", style={"height": "350px"})],
+                        style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "16px", "border": f"1px solid {t['surface_border']}", "marginLeft": "16px"}
+                    ),
+                ],
+                style={"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "0", "marginBottom": "24px"}
+            ),
+            
+            # Duration Analysis
+            html.Div([
+                dcc.Graph(id="duration-graph", style={"height": "500px"})
+            ], style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "24px", "border": f"1px solid {t['surface_border']}"})
         ],
-        style={
-            "padding": "20px",
-            "backgroundColor": t["card_bg"],
-            "height": "100%",
-            "boxSizing": "border-box",
-        },
+        style={"padding": "40px 24px"}
     )

@@ -9,7 +9,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
     t = theme.THEME
     
     # Filter data to only include rows with both IMDb and Metascore ratings
-    ratings_data = data.dropna(subset=['imdb_rating', 'metascore']).copy()
+    ratings_data: pd.DataFrame = data.dropna(subset=['imdb_rating', 'metascore']).copy()
     
     # Convert ratings to numeric if they aren't already
     ratings_data['imdb_rating'] = pd.to_numeric(ratings_data['imdb_rating'], errors='coerce')
@@ -31,7 +31,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
     ratings_data['primary_genre'] = ratings_data['genre'].str.split(',').str[0].str.strip()
     
     # Get unique genres for filter dropdown
-    genres = sorted(ratings_data['primary_genre'].dropna().unique())
+    genres: list[str] = sorted(ratings_data['primary_genre'].dropna().unique())
     
     @callback(
         Output("ratings-scatter", "figure"),
@@ -40,23 +40,24 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         Input("type-filter", "value"),
         Input("ratings-threshold", "value")
     )
-    def update_ratings_charts(selected_genres, selected_types, min_votes):
+    def update_ratings_charts(selected_genres: list[str] | None, selected_types: list[str] | None, min_votes: int):
         # Filter data based on selections
         filtered_data = ratings_data.copy()
         
         # Filter by genre
         if selected_genres:
-            filtered_data = filtered_data[filtered_data['primary_genre'].isin(selected_genres)]
+            filtered_data = filtered_data.loc[filtered_data['primary_genre'].isin(selected_genres)]
         
         # Filter by type (Movie/TV Show)
         if selected_types:
-            filtered_data = filtered_data[filtered_data['type'].isin(selected_types)]
+            filtered_data = filtered_data.loc[filtered_data['type'].isin(selected_types)]
         
         # Filter by minimum votes (if imdb_votes column exists and is numeric)
         if 'imdb_votes' in filtered_data.columns:
+            filtered_data = filtered_data.copy()  # Ensure we're working with a copy
             filtered_data['imdb_votes'] = pd.to_numeric(filtered_data['imdb_votes'], errors='coerce')
             filtered_data['imdb_votes'] = filtered_data['imdb_votes'].fillna(0)
-            filtered_data = filtered_data[filtered_data['imdb_votes'] >= min_votes]
+            filtered_data = filtered_data.loc[filtered_data['imdb_votes'] >= min_votes]
         
         # Create scatter plot: IMDb vs Metascore
         if len(filtered_data) > 0:
@@ -85,7 +86,10 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
                 title_font_size=16,
-                title_x=0.5
+                title_x=0.5,
+                font=dict(color=t["text_primary"]),
+                xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
             )
             
             # Create box plot: Rating distribution by genre
@@ -107,7 +111,10 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 paper_bgcolor=t["card_bg"],
                 title_font_size=16,
                 title_x=0.5,
-                xaxis_tickangle=-45
+                xaxis_tickangle=-45,
+                font=dict(color=t["text_primary"]),
+                xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
             )
             
         else:
@@ -117,28 +124,35 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             )
             scatter_fig.update_layout(
                 plot_bgcolor=t["card_bg"],
-                paper_bgcolor=t["card_bg"]
+                paper_bgcolor=t["card_bg"],
+                title_font_size=16,
+                title_x=0.5,
+                font=dict(color=t["text_primary"]),
+                xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
             )
             
             boxplot_fig = go.Figure()
             boxplot_fig.update_layout(
                 title="No data available for selected filters",
                 plot_bgcolor=t["card_bg"],
-                paper_bgcolor=t["card_bg"]
+                paper_bgcolor=t["card_bg"],
+                title_font_size=16,
+                title_x=0.5
             )
         
         return scatter_fig, boxplot_fig
     
     return html.Div([
         html.H2(
-            "Ratings Analysis: Critics vs Audience",
-            style={"color": t["header_bg"], "marginTop": "40px"}
+            "⭐ Ratings Analysis",
+            style={"color": t["text_primary"], "marginBottom": "24px", "fontWeight": "300"}
         ),
         
         # Filters section
         html.Div([
             html.Div([
-                html.Label("Filter by Genre:", style={"fontWeight": "bold"}),
+                html.Label("Genre", style={"color": t["text_secondary"], "marginBottom": "8px", "display": "block", "fontSize": "14px"}),
                 dcc.Dropdown(
                     id="genre-filter",
                     options=[{"label": genre, "value": genre} for genre in genres],
@@ -146,10 +160,10 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                     multi=True,
                     placeholder="Select genres..."
                 )
-            ], style={"width": "30%", "display": "inline-block", "marginRight": "2%"}),
+            ], style={"width": "32%", "display": "inline-block", "marginRight": "2%"}),
             
             html.Div([
-                html.Label("Filter by Type:", style={"fontWeight": "bold"}),
+                html.Label("Type", style={"color": t["text_secondary"], "marginBottom": "8px", "display": "block", "fontSize": "14px"}),
                 dcc.Dropdown(
                     id="type-filter",
                     options=[
@@ -160,40 +174,30 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                     multi=True,
                     placeholder="Select content type..."
                 )
-            ], style={"width": "20%", "display": "inline-block", "marginRight": "2%"}),
+            ], style={"width": "32%", "display": "inline-block", "marginRight": "2%"}),
             
             html.Div([
-                html.Label(f"Minimum IMDb Votes:", style={"fontWeight": "bold"}),
+                html.Label("Min Votes", style={"color": t["text_secondary"], "marginBottom": "8px", "display": "block", "fontSize": "14px"}),
                 dcc.Slider(
                     id="ratings-threshold",
                     min=0,
                     max=1000,
                     step=50,
                     value=100,  # Lower default threshold
-                    marks={i: str(i) for i in range(0, 1001, 200)},
+                    marks={i: str(i) for i in range(0, 1001, 250)},
                     tooltip={"placement": "bottom", "always_visible": True}
                 )
-            ], style={"width": "40%", "display": "inline-block"})
-        ], style={"marginBottom": "30px", "padding": "20px", "backgroundColor": t["card_bg"]}),
+            ], style={"width": "30%", "display": "inline-block"})
+        ], style={"marginBottom": "32px", "padding": "24px", "backgroundColor": t["surface"], "borderRadius": t["border_radius"], "border": f"1px solid {t['surface_border']}"}),
         
         # Charts section
         html.Div([
             html.Div([
-                dcc.Graph(id="ratings-scatter", style={"height": "600px"})
-            ], style={"width": "60%", "display": "inline-block", "verticalAlign": "top"}),
+                dcc.Graph(id="ratings-scatter", style={"height": "500px"})
+            ], style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "16px", "border": f"1px solid {t['surface_border']}", "width": "58%", "display": "inline-block", "verticalAlign": "top", "marginRight": "2%"}),
             
             html.Div([
-                dcc.Graph(id="genre-boxplot", style={"height": "600px"})
-            ], style={"width": "38%", "display": "inline-block", "verticalAlign": "top", "marginLeft": "2%"})
-        ]),
-        
-        # Insights section
-        html.Div([
-            html.H3("Key Insights:", style={"color": t["header_bg"]}),
-            html.Ul([
-                html.Li("Higher IMDb ratings generally correlate with higher Metascores, but there are interesting outliers"),
-                html.Li("Some genres like 'Documentary' tend to have higher critic scores than audience scores"),
-                html.Li("Popular titles (more votes) tend to have more consistent ratings between critics and audiences")
-            ], style={"color": t["text_color"], "lineHeight": "1.6"})
-        ], style={"marginTop": "30px", "padding": "20px", "backgroundColor": t["card_bg"]})
-    ])
+                dcc.Graph(id="genre-boxplot", style={"height": "500px"})
+            ], style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "16px", "border": f"1px solid {t['surface_border']}", "width": "38%", "display": "inline-block", "verticalAlign": "top"})
+        ], style={"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "0"})
+    ], style={"padding": "40px 24px"})
