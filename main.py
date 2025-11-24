@@ -1,5 +1,10 @@
 from dash import Dash, html
-from components import explore_by_time, explore_by_country, ratings_comparison, genre_analysis, user_guide
+from components import (
+    explore_by_time,
+    explore_by_country,
+    ratings_comparison,
+    genre_analysis,
+)
 from static import heading, navigation
 from data import netflix
 
@@ -28,43 +33,38 @@ def main():
         [
             heading.render(),
             navigation.render(),
-            
-            # User Guide Section
-            html.Div(id="user-guide", children=[
-                user_guide.render()
-            ]),
-            
             # Temporal Analysis Section
-            html.Div(id="temporal-analysis", children=[
-                explore_by_time.render(app, data)
-            ]),
-            
-            # Geographic Analysis Section  
-            html.Div(id="country-analysis", children=[
-                explore_by_country.render(app, data)
-            ]),
-            
+            html.Div(
+                id="temporal-analysis", children=[explore_by_time.render(app, data)]
+            ),
+            # Geographic Analysis Section
+            html.Div(
+                id="country-analysis", children=[explore_by_country.render(app, data)]
+            ),
             # Ratings Comparison Section
-            html.Div(id="ratings-analysis", children=[
-                ratings_comparison.render(app, data)
-            ]),
-            
+            html.Div(
+                id="ratings-analysis", children=[ratings_comparison.render(app, data)]
+            ),
             # Genre Analysis Section
-            html.Div(id="genre-analysis", children=[
-                genre_analysis.render(app, data)
-            ]),
-            
+            html.Div(id="genre-analysis", children=[genre_analysis.render(app, data)]),
             # Footer
-            html.Div([
-                html.P(
-                    "© 2024 Netflix Data Visualization Project | DSK808 Course",
-                    style={"textAlign": "center", "margin": "20px 0", "color": t["text_secondary"]}
-                )
-            ], style={
-                "backgroundColor": t["background"],
-                "padding": "20px 0",
-                "marginTop": "40px"
-            })
+            html.Div(
+                [
+                    html.P(
+                        "© 2024 Netflix Data Visualization Project | DSK808 Course",
+                        style={
+                            "textAlign": "center",
+                            "margin": "20px 0",
+                            "color": t["text_secondary"],
+                        },
+                    )
+                ],
+                style={
+                    "backgroundColor": t["background"],
+                    "padding": "20px 0",
+                    "marginTop": "40px",
+                },
+            ),
         ],
         style={
             "margin": "0",
@@ -72,7 +72,7 @@ def main():
             "boxSizing": "border-box",
             "backgroundColor": t["background"],
             "minHeight": "100vh",
-            "fontFamily": "'Helvetica Neue', Arial, sans-serif"
+            "fontFamily": "'Helvetica Neue', Arial, sans-serif",
         },
     )
 

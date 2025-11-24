@@ -7,58 +7,65 @@ from static import theme
 
 def render(app: Dash, data: pd.DataFrame) -> html.Div:
     t = theme.THEME
-    
+
     # Filter data to only include rows with both IMDb and Metascore ratings
-    ratings_data: pd.DataFrame = data.dropna(subset=['imdb_rating', 'metascore']).copy()
-    
+    ratings_data: pd.DataFrame = data.dropna(subset=["imdb_rating", "metascore"]).copy()
+
     # Convert ratings to numeric if they aren't already
-    ratings_data['imdb_rating'] = pd.to_numeric(ratings_data['imdb_rating'], errors='coerce')
-    ratings_data['metascore'] = pd.to_numeric(ratings_data['metascore'], errors='coerce')
-    ratings_data = ratings_data.dropna(subset=['imdb_rating', 'metascore'])
-    
+    ratings_data["imdb_rating"] = pd.to_numeric(
+        ratings_data["imdb_rating"], errors="coerce"
+    )
+    ratings_data["metascore"] = pd.to_numeric(
+        ratings_data["metascore"], errors="coerce"
+    )
+    ratings_data = ratings_data.dropna(subset=["imdb_rating", "metascore"])
+
     # Clean imdb_votes column - remove commas and convert to numeric
-    if 'imdb_votes' in ratings_data.columns:
-        ratings_data['imdb_votes'] = (
-            ratings_data['imdb_votes']
+    if "imdb_votes" in ratings_data.columns:
+        ratings_data["imdb_votes"] = (
+            ratings_data["imdb_votes"]
             .astype(str)
-            .str.replace(',', '', regex=False)
-            .replace('nan', '0')
+            .str.replace(",", "", regex=False)
+            .replace("nan", "0")
         )
-        ratings_data['imdb_votes'] = pd.to_numeric(ratings_data['imdb_votes'], errors='coerce')
-        ratings_data['imdb_votes'] = ratings_data['imdb_votes'].fillna(0)
-    
+        ratings_data["imdb_votes"] = pd.to_numeric(
+            ratings_data["imdb_votes"], errors="coerce"
+        )
+        ratings_data["imdb_votes"] = ratings_data["imdb_votes"].fillna(0)
+
     # Extract primary genre from genre column (handle comma-separated genres)
-    ratings_data['primary_genre'] = ratings_data['genre'].str.split(',').str[0].str.strip()
-    
+    ratings_data["primary_genre"] = (
+        ratings_data["genre"].str.split(",").str[0].str.strip()
+    )
+
     # Get unique genres for filter dropdown
-    genres: list[str] = sorted(ratings_data['primary_genre'].dropna().unique())
-    
+    genres: list[str] = sorted(ratings_data["primary_genre"].dropna().unique())
+
     @callback(
         Output("ratings-scatter", "figure"),
         Output("genre-boxplot", "figure"),
         Input("genre-filter", "value"),
         Input("type-filter", "value"),
-        Input("ratings-threshold", "value")
     )
-    def update_ratings_charts(selected_genres: list[str] | None, selected_types: list[str] | None, min_votes: int):
+    def update_ratings_charts(
+        selected_genres: list[str] | None,
+        selected_types: list[str] | None,
+    ):
         # Filter data based on selections
         filtered_data = ratings_data.copy()
-        
+
         # Filter by genre
         if selected_genres:
-            filtered_data = filtered_data.loc[filtered_data['primary_genre'].isin(selected_genres)]
-        
+            filtered_data = filtered_data.loc[
+                filtered_data["primary_genre"].isin(selected_genres)
+            ]
+
         # Filter by type (Movie/TV Show)
         if selected_types:
-            filtered_data = filtered_data.loc[filtered_data['type'].isin(selected_types)]
-        
-        # Filter by minimum votes (if imdb_votes column exists and is numeric)
-        if 'imdb_votes' in filtered_data.columns:
-            # No need to copy again; .loc[] already returns a copy
-            filtered_data['imdb_votes'] = pd.to_numeric(filtered_data['imdb_votes'], errors='coerce')
-            filtered_data['imdb_votes'] = filtered_data['imdb_votes'].fillna(0)
-            filtered_data = filtered_data.loc[filtered_data['imdb_votes'] >= min_votes]
-        
+            filtered_data = filtered_data.loc[
+                filtered_data["type"].isin(selected_types)
+            ]
+
         # Create scatter plot: IMDb vs Metascore
         if len(filtered_data) > 0:
             scatter_fig = px.scatter(
@@ -73,15 +80,25 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                     "imdb_rating": "IMDb Rating (0-10)",
                     "metascore": "Metascore (0-100)",
                     "primary_genre": "Genre",
-                    "imdb_votes": "IMDb Votes"
+                    "imdb_votes": "IMDb Votes",
                 },
-                color_discrete_sequence=t["categorical_colors"]
+                color_discrete_sequence=t["categorical_colors"],
             )
-            
+
             # Add reference lines
-            scatter_fig.add_hline(y=50, line_dash="dash", line_color="gray", annotation_text="Average Metascore")
-            scatter_fig.add_vline(x=6.5, line_dash="dash", line_color="gray", annotation_text="Average IMDb")
-            
+            scatter_fig.add_hline(
+                y=50,
+                line_dash="dash",
+                line_color="gray",
+                annotation_text="Average Metascore",
+            )
+            scatter_fig.add_vline(
+                x=6.5,
+                line_dash="dash",
+                line_color="gray",
+                annotation_text="Average IMDb",
+            )
+
             scatter_fig.update_layout(
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
@@ -89,20 +106,22 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 title_x=0.5,
                 font=dict(color=t["text_primary"]),
                 xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
             )
-            
+
             # Create box plot: Rating distribution by genre
             boxplot_fig = go.Figure()
-            
+
             # Add IMDb rating box plot
-            boxplot_fig.add_trace(go.Box(
-                y=filtered_data['imdb_rating'],
-                x=filtered_data['primary_genre'],
-                name='IMDb Rating',
-                marker_color=t["plot_color"]
-            ))
-            
+            boxplot_fig.add_trace(
+                go.Box(
+                    y=filtered_data["imdb_rating"],
+                    x=filtered_data["primary_genre"],
+                    name="IMDb Rating",
+                    marker_color=t["plot_color"],
+                )
+            )
+
             boxplot_fig.update_layout(
                 title="Rating Distribution by Genre",
                 xaxis_title="Genre",
@@ -114,14 +133,12 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 xaxis_tickangle=-45,
                 font=dict(color=t["text_primary"]),
                 xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
             )
-            
+
         else:
             # Empty figures if no data
-            scatter_fig = px.scatter(
-                title="No data available for selected filters"
-            )
+            scatter_fig = px.scatter(title="No data available for selected filters")
             scatter_fig.update_layout(
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
@@ -129,75 +146,127 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 title_x=0.5,
                 font=dict(color=t["text_primary"]),
                 xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
             )
-            
+
             boxplot_fig = go.Figure()
             boxplot_fig.update_layout(
                 title="No data available for selected filters",
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
                 title_font_size=16,
-                title_x=0.5
+                title_x=0.5,
             )
-        
+
         return scatter_fig, boxplot_fig
-    
-    return html.Div([
-        html.H2(
-            "⭐ Ratings Analysis",
-            style={"color": t["text_primary"], "marginBottom": "24px", "fontWeight": "300"}
-        ),
-        
-        # Filters section
-        html.Div([
-            html.Div([
-                html.Label("Genre", style={"color": t["text_secondary"], "marginBottom": "8px", "display": "block", "fontSize": "14px"}),
-                dcc.Dropdown(
-                    id="genre-filter",
-                    options=[{"label": genre, "value": genre} for genre in genres],
-                    value=genres[:5] if len(genres) > 5 else genres,  # Default to first 5 genres
-                    multi=True,
-                    placeholder="Select genres..."
-                )
-            ], style={"width": "32%", "display": "inline-block", "marginRight": "2%"}),
-            
-            html.Div([
-                html.Label("Type", style={"color": t["text_secondary"], "marginBottom": "8px", "display": "block", "fontSize": "14px"}),
-                dcc.Dropdown(
-                    id="type-filter",
-                    options=[
-                        {"label": "Movie", "value": "Movie"},
-                        {"label": "TV Show", "value": "TV Show"}
-                    ],
-                    value=["Movie", "TV Show"],
-                    multi=True,
-                    placeholder="Select content type..."
-                )
-            ], style={"width": "32%", "display": "inline-block", "marginRight": "2%"}),
-            
-            html.Div([
-                html.Label("Min Votes", style={"color": t["text_secondary"], "marginBottom": "8px", "display": "block", "fontSize": "14px"}),
-                dcc.Slider(
-                    id="ratings-threshold",
-                    min=0,
-                    max=1000,
-                    step=50,
-                    value=100,  # Lower default threshold
-                    marks={i: str(i) for i in range(0, 1001, 250)},
-                    tooltip={"placement": "bottom", "always_visible": True}
-                )
-            ], style={"width": "30%", "display": "inline-block"})
-        ], style={"marginBottom": "32px", "padding": "24px", "backgroundColor": t["surface"], "borderRadius": t["border_radius"], "border": f"1px solid {t['surface_border']}"}),
-        
-        # Charts section
-        html.Div([
-            html.Div([
-                dcc.Graph(id="ratings-scatter", style={"height": "500px"})
-            ], style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "16px", "border": f"1px solid {t['surface_border']}", "width": "58%", "display": "inline-block", "verticalAlign": "top", "marginRight": "2%"}),
-            
-            html.Div([
-                dcc.Graph(id="genre-boxplot", style={"height": "500px"})
-            ], style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "16px", "border": f"1px solid {t['surface_border']}", "width": "38%", "display": "inline-block", "verticalAlign": "top"})
-        ], style={"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "0"})
-    ], style={"padding": "40px 24px"})
+
+    return html.Div(
+        [
+            html.H2(
+                "⭐ Ratings Analysis",
+                style={
+                    "color": t["text_primary"],
+                    "marginBottom": "24px",
+                    "fontWeight": "300",
+                },
+            ),
+            # Filters section
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.Label(
+                                "Genre",
+                                style={
+                                    "color": t["text_secondary"],
+                                    "marginBottom": "8px",
+                                    "display": "block",
+                                    "fontSize": "14px",
+                                },
+                            ),
+                            dcc.Dropdown(
+                                id="genre-filter",
+                                options=[
+                                    {"label": genre, "value": genre} for genre in genres
+                                ],
+                                value=genres[:5]
+                                if len(genres) > 5
+                                else genres,  # Default to first 5 genres
+                                multi=True,
+                                placeholder="Select genres...",
+                            ),
+                        ],
+                        style={
+                            "width": "48%",
+                            "display": "inline-block",
+                            "marginRight": "2%",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.Label(
+                                "Type",
+                                style={
+                                    "color": t["text_secondary"],
+                                    "marginBottom": "8px",
+                                    "display": "block",
+                                    "fontSize": "14px",
+                                },
+                            ),
+                            dcc.Dropdown(
+                                id="type-filter",
+                                options=[
+                                    {"label": "Movie", "value": "Movie"},
+                                    {"label": "TV Show", "value": "TV Show"},
+                                ],
+                                value=["Movie", "TV Show"],
+                                multi=True,
+                                placeholder="Select content type...",
+                            ),
+                        ],
+                        style={
+                            "width": "48%",
+                            "display": "inline-block",
+                        },
+                    ),
+                ],
+                style={
+                    "marginBottom": "32px",
+                    "padding": "24px",
+                    "backgroundColor": t["surface"],
+                    "borderRadius": t["border_radius"],
+                    "border": f"1px solid {t['surface_border']}",
+                },
+            ),
+            # Charts section
+            html.Div(
+                [
+                    html.Div(
+                        [dcc.Graph(id="ratings-scatter", style={"height": "500px"})],
+                        style={
+                            "backgroundColor": t["surface"],
+                            "borderRadius": t["border_radius"],
+                            "padding": "16px",
+                            "border": f"1px solid {t['surface_border']}",
+                            "display": "inline-block",
+                            "verticalAlign": "top",
+                            "marginRight": "2%",
+                        },
+                    ),
+                    html.Div(
+                        [dcc.Graph(id="genre-boxplot", style={"height": "500px"})],
+                        style={
+                            "backgroundColor": t["surface"],
+                            "borderRadius": t["border_radius"],
+                            "padding": "16px",
+                            "border": f"1px solid {t['surface_border']}",
+                            "display": "inline-block",
+                            "verticalAlign": "top",
+                        },
+                    ),
+                ],
+                style={"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "0"},
+            ),
+        ],
+        style={"padding": "40px 24px"},
+    )

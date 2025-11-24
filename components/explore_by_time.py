@@ -65,8 +65,8 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             # Extract minutes from runtime strings like "90 min"
             filtered_df = filtered_df.copy()
             runtime_series = pd.Series(filtered_df["runtime"])
-            filtered_df["duration_minutes"] = (
-                pd.to_numeric(runtime_series.str.extract(r"(\d+)")[0], errors="coerce")
+            filtered_df["duration_minutes"] = pd.to_numeric(
+                runtime_series.str.extract(r"(\d+)")[0], errors="coerce"
             )
 
             # Remove rows where duration couldn't be extracted
@@ -90,7 +90,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 yaxis_title="Duration (minutes)",
                 font=dict(color=t["text_primary"]),
                 xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
             )
         else:
             fig = px.scatter(
@@ -127,7 +127,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 title_x=0.5,
                 font=dict(color=t["text_primary"]),
                 xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
             )
         return fig
 
@@ -156,11 +156,13 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 title_x=0.5,
                 font=dict(color=t["text_primary"]),
                 xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
             )
         else:
             # Count movies per year
-            movies_per_year = pd.Series(filtered_df["release_year"]).value_counts().sort_index()
+            movies_per_year = (
+                pd.Series(filtered_df["release_year"]).value_counts().sort_index()
+            )
             movies_df = movies_per_year.reset_index()
             movies_df.columns = ["release_year", "count"]
 
@@ -189,7 +191,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 yaxis_title="Number of Movies",
                 font=dict(color=t["text_primary"]),
                 xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
             )
 
         return fig
@@ -217,11 +219,13 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 title_x=0.5,
                 font=dict(color=t["text_primary"]),
                 xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
             )
         else:
             # Count ratings, handling missing values
-            rating_counts = pd.Series(filtered_df["rating"]).fillna("Not Rated").value_counts()
+            rating_counts = (
+                pd.Series(filtered_df["rating"]).fillna("Not Rated").value_counts()
+            )
 
             # Group smaller values into "Other" category
             # Keep top 6 ratings, group the rest as "Other"
@@ -245,9 +249,11 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 names="rating",
                 title=f"Movie Rating Distribution ({year_range[0]} - {year_range[1]})",
                 hole=0.3,  # Create a donut chart for better aesthetics
-                color_discrete_sequence=t[
-                    "categorical_colors"
-                ],  # Use colorblind-safe categorical colors
+                # Set font color for the donut chart
+            )
+
+            fig.update_layout(
+                font=dict(color=t["text_primary"]),  # This sets the default font color
             )
 
             fig.update_traces(
@@ -284,8 +290,6 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
 
         return fig
 
-    
-
     return html.Div(
         [
             html.H2(
@@ -293,49 +297,98 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 style={
                     "color": t["text_primary"],
                     "marginBottom": "24px",
-                    "fontWeight": "300"
+                    "fontWeight": "300",
                 },
             ),
-            
             # Year Range Filter
-            html.Div([
-                html.Label("Time Period", style={"color": t["text_secondary"], "marginBottom": "12px", "display": "block", "fontSize": "14px"}),
-                dcc.RangeSlider(
-                    id="year-slider",
-                    min=int(1940),
-                    max=int(2025),
-                    value=[int(df["release_year"].min()), int(df["release_year"].max())],
-                    marks={
-                        str(year): str(year)
-                        for year in range(
+            html.Div(
+                [
+                    html.Label(
+                        "Time Period",
+                        style={
+                            "color": t["text_secondary"],
+                            "marginBottom": "12px",
+                            "display": "block",
+                            "fontSize": "14px",
+                        },
+                    ),
+                    dcc.RangeSlider(
+                        id="year-slider",
+                        min=int(1940),
+                        max=int(2025),
+                        value=[
                             int(df["release_year"].min()),
-                            int(df["release_year"].max()) + 1,
-                            10,
-                        )
-                    },
-                    step=1,
-                ),
-            ], style={"marginBottom": "32px", "padding": "24px", "backgroundColor": t["surface"], "borderRadius": t["border_radius"], "border": f"1px solid {t['surface_border']}"}),
-            
+                            int(df["release_year"].max()),
+                        ],
+                        marks={
+                            str(year): str(year)
+                            for year in range(
+                                int(df["release_year"].min()),
+                                int(df["release_year"].max()) + 1,
+                                10,
+                            )
+                        },
+                        step=1,
+                    ),
+                ],
+                style={
+                    "marginBottom": "32px",
+                    "padding": "24px",
+                    "backgroundColor": t["surface"],
+                    "borderRadius": t["border_radius"],
+                    "border": f"1px solid {t['surface_border']}",
+                },
+            ),
             # Charts Grid
             html.Div(
                 [
                     html.Div(
-                        [dcc.Graph(id="rating-distribution-chart", style={"height": "350px"})],
-                        style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "16px", "border": f"1px solid {t['surface_border']}"}
+                        [
+                            dcc.Graph(
+                                id="rating-distribution-chart",
+                                style={"height": "350px"},
+                            )
+                        ],
+                        style={
+                            "backgroundColor": t["surface"],
+                            "borderRadius": t["border_radius"],
+                            "padding": "16px",
+                            "border": f"1px solid {t['surface_border']}",
+                        },
                     ),
                     html.Div(
-                        [dcc.Graph(id="movies-per-year-histogram", style={"height": "350px"})],
-                        style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "16px", "border": f"1px solid {t['surface_border']}", "marginLeft": "16px"}
+                        [
+                            dcc.Graph(
+                                id="movies-per-year-histogram",
+                                style={"height": "350px"},
+                            )
+                        ],
+                        style={
+                            "backgroundColor": t["surface"],
+                            "borderRadius": t["border_radius"],
+                            "padding": "16px",
+                            "border": f"1px solid {t['surface_border']}",
+                            "marginLeft": "16px",
+                        },
                     ),
                 ],
-                style={"display": "grid", "gridTemplateColumns": "1fr 1fr", "gap": "0", "marginBottom": "24px"}
+                style={
+                    "display": "grid",
+                    "gridTemplateColumns": "1fr 1fr",
+                    "gap": "0",
+                    "marginBottom": "24px",
+                },
             ),
-            
             # Duration Analysis
-            html.Div([
-                dcc.Graph(id="duration-graph", style={"height": "500px"})
-            ], style={"backgroundColor": t["surface"], "borderRadius": t["border_radius"], "padding": "24px", "border": f"1px solid {t['surface_border']}"})
+            html.Div(
+                [dcc.Graph(id="duration-graph", style={"height": "500px"})],
+                style={
+                    "backgroundColor": t["surface"],
+                    "borderRadius": t["border_radius"],
+                    "padding": "24px",
+                    "border": f"1px solid {t['surface_border']}",
+                },
+            ),
         ],
-        style={"padding": "40px 24px"}
+        style={"padding": "40px 24px"},
     )
