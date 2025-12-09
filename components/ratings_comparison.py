@@ -163,7 +163,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
     return html.Div(
         [
             html.H2(
-                "⭐ Ratings Analysis",
+                "Ratings",
                 style={
                     "color": t["text_primary"],
                     "marginBottom": "24px",

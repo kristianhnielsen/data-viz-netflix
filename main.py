@@ -8,6 +8,9 @@ from components import (
 from static import heading, navigation
 from data import netflix
 
+# app layout
+from static import theme
+
 # app setup
 app = Dash(__name__)
 app.title = "Netflix in Numbers - Interactive Data Visualization"
@@ -24,8 +27,6 @@ preprocessor = netflix.NetflixDataPreprocessor()
 netflix_data = netflix.NetflixData(config=config, preprocessor=preprocessor)
 data = netflix_data.data
 
-# app layout
-from static import theme
 
 t = theme.THEME
 

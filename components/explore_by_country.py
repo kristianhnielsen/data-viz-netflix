@@ -33,7 +33,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             framewidth=1,
             showcoastlines=True,
             projection_type="equirectangular",
-            bgcolor=t["card_bg"]
+            bgcolor=t["card_bg"],
         ),
         coloraxis_colorbar=dict(
             title="Number of Titles",
@@ -43,7 +43,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         ),
         plot_bgcolor=t["card_bg"],
         paper_bgcolor=t["card_bg"],
-        font=dict(color=t["text_primary"])
+        font=dict(color=t["text_primary"]),
     )
 
     @callback(
@@ -59,7 +59,9 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             selected_country = click_data["points"][0]["location"]
 
         # Filter data for selected country
-        country_mask = (data["country_primary"] == selected_country) & (data["release_year"] > 0)
+        country_mask = (data["country_primary"] == selected_country) & (
+            data["release_year"] > 0
+        )
         country_df = data.loc[country_mask]
 
         # Create histogram data with bins and use bar chart with continuous color
@@ -86,7 +88,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             paper_bgcolor=t["card_bg"],
             font=dict(color=t["text_primary"]),
             xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-            yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+            yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
         )
 
         # Create heatmap of genres over time
@@ -94,13 +96,13 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         genre_data = []
         for index in range(len(country_df)):
             row = country_df.iloc[index]
-            genre_value = row['genre']
+            genre_value = row["genre"]
             if pd.notna(genre_value) and isinstance(genre_value, str):
                 genres = [g.strip() for g in genre_value.split(",")]
                 for genre in genres:
                     genre_data.append(
                         {
-                            "release_year": row['release_year'],
+                            "release_year": row["release_year"],
                             "genre": genre,
                         }
                     )
@@ -134,7 +136,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 paper_bgcolor=t["card_bg"],
                 font=dict(color=t["text_primary"]),
                 xaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
-                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"])
+                yaxis=dict(gridcolor=t["grid_color"], zerolinecolor=t["grid_color"]),
             )
         else:
             # Empty heatmap if no data
@@ -147,7 +149,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 paper_bgcolor=t["card_bg"],
                 title_font_size=16,
                 title_x=0.5,
-                font=dict(color=t["text_primary"])
+                font=dict(color=t["text_primary"]),
             )
 
         return hist_fig, heatmap_fig
@@ -155,21 +157,34 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
     return html.Div(
         [
             html.H2(
-                "🌍 Global Content",
+                "Country",
                 style={
                     "color": t["text_primary"],
                     "marginBottom": "24px",
-                    "fontWeight": "300"
+                    "fontWeight": "300",
                 },
             ),
-            dcc.Graph(id="country-map", figure=fig, style={"height": "500px", "backgroundColor": t["surface"], "borderRadius": t["border_radius"], "border": f"1px solid {t['surface_border']}"}),
+            dcc.Graph(
+                id="country-map",
+                figure=fig,
+                style={
+                    "height": "500px",
+                    "backgroundColor": t["surface"],
+                    "borderRadius": t["border_radius"],
+                    "border": f"1px solid {t['surface_border']}",
+                },
+            ),
             html.Div(
                 [
                     html.Div(
                         [
                             html.H3(
                                 "Release Timeline",
-                                style={"color": t["text_primary"], "marginBottom": "16px", "fontWeight": "300"},
+                                style={
+                                    "color": t["text_primary"],
+                                    "marginBottom": "16px",
+                                    "fontWeight": "300",
+                                },
                             ),
                             dcc.Graph(
                                 id="country-histogram", style={"height": "400px"}
@@ -180,7 +195,11 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                         [
                             html.H3(
                                 "Genre Trends",
-                                style={"color": t["text_primary"], "marginBottom": "16px", "fontWeight": "300"},
+                                style={
+                                    "color": t["text_primary"],
+                                    "marginBottom": "16px",
+                                    "fontWeight": "300",
+                                },
                             ),
                             dcc.Graph(
                                 id="country-genre-heatmap", style={"height": "400px"}
@@ -192,9 +211,9 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                     "display": "grid",
                     "gridTemplateColumns": "1fr 1fr",
                     "gap": "16px",
-                    "marginTop": "24px"
+                    "marginTop": "24px",
                 },
             ),
         ],
-        style={"padding": "40px 24px"}
+        style={"padding": "40px 24px"},
     )
