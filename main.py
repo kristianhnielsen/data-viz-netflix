@@ -23,6 +23,7 @@ def main():
     # app setup
     app = Dash(__name__)
     app.title = "Netflix in Numbers - Interactive Data Visualization"
+    server = app.server
 
     # app layout
     from static import theme
