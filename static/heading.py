@@ -8,18 +8,17 @@ def render():
     return html.Div(
         [
             html.Img(
-                src="https://images.ctfassets.net/y2ske730sjqp/1aONibCke6niZhgPxuiilC/2c401b05a07288746ddf3bd3943fbc76/BrandAssets_Logos_01-Wordmark.jpg?w=940",
+                src="../assets/favicon.png",
                 style={
-                    "height": "32px",
+                    "height": "150px",
                     "width": "auto",
-                    "opacity": "0.9",
                 },
             ),
         ],
         style={
             "display": "flex",
             "alignItems": "center",
-            "justifyContent": "center",
+            "justifyContent": "start",
             "padding": "16px 24px",
             "height": "64px",
             "backgroundColor": t["header_bg"],
