@@ -8,6 +8,11 @@ from components import (
 from static import heading, navigation
 from data import netflix
 
+# app setup
+app = Dash(__name__)
+app.title = "Netflix in Numbers - Interactive Data Visualization"
+server = app.server
+
 
 def main():
     # data import and preprocessing
@@ -19,11 +24,6 @@ def main():
 
     netflix_data = netflix.NetflixData(config=config, preprocessor=preprocessor)
     data = netflix_data.data
-
-    # app setup
-    app = Dash(__name__)
-    app.title = "Netflix in Numbers - Interactive Data Visualization"
-    server = app.server
 
     # app layout
     from static import theme
