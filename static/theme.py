@@ -24,12 +24,14 @@ THEME = {
     "grid_color": "#404040",  # Chart grid lines
     # Sequential Scale (for heatmaps, choropleths)
     "cont_scale": [
-        [0.0, "#2a2a2a"],  # Dark surface
-        [0.2, "#404040"],  # Medium dark
-        [0.4, "#666666"],  # Medium gray
-        [0.6, "#b3b3b3"],  # Light gray
-        [0.8, "#e50914"],  # Netflix red
-        [1.0, "#ff6b6b"],  # Bright red
+        [0.0, "#2a2a2a"],  # Medium gray
+        [0.25, "#b3b3b3"],  # Light gray
+        [0.75, "#ff6b6b"],  # Bright red
+        [1, "#e50914"],  # Netflix red
+    ],
+    "choropleth_cont_scale": [
+        [0.0, "#2a2a2a"],  # Medium gray
+        [1, "#e50914"],  # Netflix red
     ],
     # Categorical Colors (optimized for dark theme)
     "categorical_colors": [
