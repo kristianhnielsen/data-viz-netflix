@@ -15,10 +15,10 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         locations="country_primary",
         locationmode="country names",
         color="count",
-        color_continuous_scale=t["cont_scale"],
+        color_continuous_scale=t["choropleth_cont_scale"],
         labels={"count": "Number of Titles"},
         range_color=(
-            country_data["count"].quantile(0.1),
+            country_data["count"].quantile(0.05),
             country_data["count"].quantile(0.975),
         ),
     )
@@ -73,9 +73,9 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             y="count",
             title=f"Release Year Distribution - {selected_country}",
             labels={"release_year": "Release Year", "count": "Number of Titles"},
-            color="release_year",
-            color_continuous_scale=t["cont_scale"],
         )
+
+        hist_fig.update_traces(marker=dict(color=t["plot_color"]))
 
         hist_fig.update_layout(
             title_font_size=16,
@@ -83,7 +83,6 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             xaxis_title="Release Year",
             yaxis_title="Number of Titles",
             showlegend=False,
-            coloraxis_showscale=False,  # Hide the colorbar since year is already on x-axis
             plot_bgcolor=t["card_bg"],
             paper_bgcolor=t["card_bg"],
             font=dict(color=t["text_primary"]),
@@ -157,7 +156,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
     return html.Div(
         [
             html.H2(
-                "Country",
+                "🌍 Global Content",
                 style={
                     "color": t["text_primary"],
                     "marginBottom": "24px",
