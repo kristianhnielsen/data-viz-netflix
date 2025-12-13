@@ -156,7 +156,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
     return html.Div(
         [
             html.H2(
-                "🌍 Global Content",
+                "Country",
                 style={
                     "color": t["text_primary"],
                     "marginBottom": "24px",
