@@ -77,12 +77,30 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 hover_data=["title", "type", "release_year"],
                 title="IMDb Rating vs Metascore Comparison",
                 labels={
-                    "imdb_rating": "IMDb Rating (0-10)",
-                    "metascore": "Metascore (0-100)",
+                    "imdb_rating": "IMDb Rating",
+                    "metascore": "Metascore",
                     "primary_genre": "Genre",
-                    "imdb_votes": "IMDb Votes",
+                    "imdb_votes": "Votes",
+                    "title": "Title",
+                    "type": "Type",
+                    "release_year": "Year",
                 },
                 color_discrete_sequence=t["categorical_colors"],
+            )
+
+            scatter_fig.update_traces(
+                hovertemplate="<b>%{customdata[0]}</b><br>"
+                + "Genre: %{fullData.name}<br>"
+                + "IMDb Rating: %{x}<br>"
+                + "Metascore: %{y}<br>"
+                + "Type: %{customdata[1]}<br>"
+                + "Year: %{customdata[2]}"
+                + (
+                    "<br>Votes: %{marker.size}"
+                    if "imdb_votes" in filtered_data.columns
+                    else ""
+                )
+                + "<extra></extra>"
             )
 
             # Add reference lines
@@ -119,6 +137,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                     x=filtered_data["primary_genre"],
                     name="IMDb Rating",
                     marker_color=t["plot_color"],
+                    hovertemplate="Genre: %{x}<br>Rating: %{y}<extra></extra>",
                 )
             )
 
@@ -189,9 +208,9 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                                 options=[
                                     {"label": genre, "value": genre} for genre in genres
                                 ],
-                                value=genres[:5]
-                                if len(genres) > 5
-                                else genres,  # Default to first 5 genres
+                                value=(
+                                    genres[:5] if len(genres) > 5 else genres
+                                ),  # Default to first 5 genres
                                 multi=True,
                                 placeholder="Select genres...",
                             ),

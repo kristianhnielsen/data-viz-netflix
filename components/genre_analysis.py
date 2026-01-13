@@ -71,6 +71,9 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 color="count",
                 color_continuous_scale=t["cont_scale"],
             )
+            treemap_fig.update_traces(
+                hovertemplate="<b>%{label}</b><br>Count: %{value}<extra></extra>"
+            )
             treemap_fig.update_layout(
                 plot_bgcolor=t["card_bg"],
                 paper_bgcolor=t["card_bg"],
@@ -90,6 +93,9 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 names="type",
                 title=f"Content Type Distribution for {selected_genre}",
                 color_discrete_sequence=t["categorical_colors"],
+            )
+            treemap_fig.update_traces(
+                hovertemplate="<b>%{label}</b><br>Count: %{value}<br>Percentage: %{percent}<extra></extra>"
             )
             treemap_fig.update_layout(
                 plot_bgcolor=t["card_bg"],
@@ -112,8 +118,11 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 y="count",
                 color="type",
                 title=f"Content Release Timeline - {selected_genre or 'All Genres'}",
-                labels={"release_year": "Release Year", "count": "Number of Titles"},
+                labels={"release_year": "Year", "count": "Count", "type": "Type"},
                 color_discrete_sequence=t["categorical_colors"],
+            )
+            timeline_fig.update_traces(
+                hovertemplate="Year: %{x}<br>Count: %{y}<br>Type: %{fullData.name}<extra></extra>"
             )
             timeline_fig.update_layout(
                 plot_bgcolor=t["card_bg"],
@@ -158,9 +167,12 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             heatmap_fig = px.imshow(
                 heatmap_pivot,
                 title=f"Genre Production by Country - {selected_genre or 'All Genres'}",
-                labels=dict(x="Genre", y="Country", color="Number of Titles"),
+                labels=dict(x="Genre", y="Country", color="Count"),
                 color_continuous_scale=t["cont_scale"],
                 aspect="auto",
+            )
+            heatmap_fig.update_traces(
+                hovertemplate="Country: %{y}<br>Genre: %{x}<br>Count: %{z}<extra></extra>"
             )
             heatmap_fig.update_layout(
                 plot_bgcolor=t["card_bg"],

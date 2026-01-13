@@ -16,11 +16,15 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
         locationmode="country names",
         color="count",
         color_continuous_scale=t["choropleth_cont_scale"],
-        labels={"count": "Number of Titles"},
+        labels={"count": "Number of Titles", "country_primary": "Country"},
         range_color=(
             country_data["count"].quantile(0.05),
             country_data["count"].quantile(0.975),
         ),
+    )
+
+    fig.update_traces(
+        hovertemplate="<b>%{location}</b><br>Number of Titles: %{z}<extra></extra>"
     )
 
     # Update layout for better appearance
@@ -72,10 +76,13 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
             x="release_year",
             y="count",
             title=f"Release Year Distribution - {selected_country}",
-            labels={"release_year": "Release Year", "count": "Number of Titles"},
+            labels={"release_year": "Year", "count": "Count"},
         )
 
-        hist_fig.update_traces(marker=dict(color=t["plot_color"]))
+        hist_fig.update_traces(
+            marker=dict(color=t["plot_color"]),
+            hovertemplate="Year: %{x}<br>Count: %{y}<extra></extra>",
+        )
 
         hist_fig.update_layout(
             title_font_size=16,
@@ -120,10 +127,14 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
 
             heatmap_fig = px.imshow(
                 pivot_data,
-                labels=dict(x="Release Year", y="Genre", color="Count"),
+                labels=dict(x="Year", y="Genre", color="Count"),
                 title=f"Genre Distribution Over Time - {selected_country}",
                 color_continuous_scale=t["cont_scale"],
                 aspect="auto",
+            )
+
+            heatmap_fig.update_traces(
+                hovertemplate="Genre: %{y}<br>Year: %{x}<br>Count: %{z}<extra></extra>"
             )
 
             heatmap_fig.update_layout(

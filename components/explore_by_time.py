@@ -104,8 +104,6 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 },
                 hover_data={
                     "title": True,  # Show movie title on hover
-                    "release_year": True,  # Show release year
-                    "duration_minutes": True,  # Show duration
                     "rating": True,  # Show rating if available
                 },
             )
@@ -116,7 +114,7 @@ def render(app: Dash, data: pd.DataFrame) -> html.Div:
                 hovertemplate="<b>%{customdata[0]}</b><br>"  # Movie title
                 + "Release Year: %{x}<br>"
                 + "Duration: %{y} minutes<br>"
-                + "Rating: %{customdata[3]}<br>"
+                + "Rating: %{customdata[1]}<br>"  # Rating is now at index 1
                 + "<extra></extra>",  # Remove trace box
             )
 
