@@ -50,7 +50,7 @@ app.layout = html.Div(
         html.Div(
             [
                 html.P(
-                    "© 2024 Netflix Data Visualization Project | DSK808 Course",
+                    "© 2026 Netflix Data Visualization Project | DSK808 Course",
                     style={
                         "textAlign": "center",
                         "margin": "20px 0",
